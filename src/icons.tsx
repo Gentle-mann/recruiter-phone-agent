@@ -1,17 +1,11 @@
 // Brand mark and the small icon set used across the app. All monochrome via currentColor.
 
-/** Callscreen mark: a call in progress. Black disc, waveform cut out in white. */
+/** Callscreen mark: a bold C with a dot at its centre, a call that is live. */
 export function Logo({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="12" fill="currentColor" />
-      <g fill="#fff">
-        <rect x="5" y="10" width="2" height="4" rx="1" />
-        <rect x="8.5" y="7.5" width="2" height="9" rx="1" />
-        <rect x="12" y="5" width="2" height="14" rx="1" />
-        <rect x="15.5" y="8" width="2" height="8" rx="1" />
-        <rect x="19" y="10.5" width="2" height="3" rx="1" />
-      </g>
+      <path d="M19.4 6.4A9.5 9.5 0 1 0 19.4 17.6" fill="none" stroke="currentColor" strokeWidth="4.2" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="2.6" fill="currentColor" />
     </svg>
   );
 }
