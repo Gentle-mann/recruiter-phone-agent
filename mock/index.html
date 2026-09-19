@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Callscreen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+* { box-sizing: border-box; }
+:root {
+  --paper: #ffffff;
+  --side: #fafafa;
+  --ink: #000000;
+  --ink-2: #666666;
+  --ink-3: #a3a3a3;
+  --line: #e8e8e8;
+  --line-soft: #f1f1f1;
+  --hover: #f4f4f4;
+  --live: #4f8a63;
+  --stone: #7c766c;  --stone-bg: #eeece7;
+  --slate: #5b6474;  --slate-bg: #e5e8ee;
+  --sage: #4f6b58;   --sage-bg: #e2e9e4;
+  --clay: #7a5f4c;   --clay-bg: #ece3db;
+  --below: #a8713f;
+  --radius: 8px;
+  --font: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  font: 13px/1.45 var(--font);
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  overflow: hidden;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+::selection { background: #000; color: #fff; }
+
+.app { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
+
+/* ---------- Sidebar ---------- */
+.side { background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 18px 12px 14px; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 0 8px 22px; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.brand i { width: 13px; height: 13px; border-radius: 50%; background: var(--ink); display: inline-block; }
+.nav-h { font-size: 12px; color: var(--ink-3); padding: 0 8px 6px; }
+.role {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 7px 8px; border-radius: 6px; text-align: left; color: var(--ink-2);
+}
+.role:hover { background: #efefef; color: var(--ink); }
+.role.active { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0,0,0,.04); }
+.role .n { font-size: 12px; color: var(--ink-3); }
+.role.active .n { color: var(--ink-2); }
+.role.new { color: var(--ink-2); margin-top: 4px; }
+.role.new:hover { color: var(--ink); }
+.role.new svg { width: 14px; height: 14px; }
+.role.new span { display: flex; align-items: center; gap: 8px; }
+.side-foot { margin-top: auto; padding: 0 8px; color: var(--ink-2); display: flex; flex-direction: column; gap: 10px; }
+.status { display: flex; align-items: center; gap: 8px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); position: relative; flex: none; }
+.dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--live); opacity: 0; animation: ping 2.2s ease-out infinite; }
+@keyframes ping { 0% { transform: scale(.5); opacity: .7 } 100% { transform: scale(1.3); opacity: 0 } }
+.side-foot a { color: inherit; text-decoration: none; }
+.side-foot a:hover { color: var(--ink); }
+
+/* ---------- Main ---------- */
+main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.view { display: none; flex-direction: column; min-height: 0; flex: 1; }
+.view.active { display: flex; }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 28px 0; }
+h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; margin: 0; line-height: 1.2; }
+.sub { color: var(--ink-2); margin: 4px 0 0; }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.live-pill { display: flex; align-items: center; gap: 8px; color: var(--ink-2); padding: 0 10px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line); background: #fff; color: var(--ink); white-space: nowrap; }
+.btn:hover { background: var(--hover); }
+.btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.primary:hover { background: #222; }
+.btn svg { width: 14px; height: 14px; }
+.search { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink-3); width: 200px; }
+.search input { border: 0; background: none; outline: 0; width: 100%; color: var(--ink); }
+.search input::placeholder { color: var(--ink-3); }
+.search svg { width: 14px; height: 14px; flex: none; }
+
+/* board */
+.board { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 14px 28px 0; min-height: 0; }
+.col { display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--line-soft); padding: 0 12px; min-height: 0; }
+.col:first-child { border-left: 0; padding-left: 0; }
+.col:last-child { padding-right: 0; }
+.col-h { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0 10px; }
+.col-h .t { font-weight: 500; display: flex; align-items: center; gap: 7px; }
+.col-h .t::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--stage); }
+.col.s0 { --stage: var(--stone); } .col.s1 { --stage: var(--slate); } .col.s2 { --stage: var(--sage); } .col.s3 { --stage: var(--clay); } .col.s4 { --stage: #000; }
+.col-h .c { color: var(--ink-3); font-size: 12px; }
+.col-body { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; padding-bottom: 20px; scrollbar-width: thin; scrollbar-color: #ddd transparent; }
+.rule { display: flex; align-items: center; gap: 8px; color: var(--ink-3); font-size: 11px; padding: 6px 0 2px; }
+.rule::before, .rule::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.rule::before { flex: 0 0 4px; }
+.empty { color: var(--ink-3); padding: 10px 0; font-size: 12px; }
+
+.card {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: #fff; text-align: left; width: 100%; min-width: 0; flex: none;
+  transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: #bdbdbd; }
+.card.enter { animation: enter .45s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes enter { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.card .who { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.card .name { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .meta { display: block; color: var(--ink-3); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .side-r { flex: none; display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 12px; }
+.av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 600; flex: none; letter-spacing: .02em; }
+.av.s0 { background: var(--stone-bg); color: var(--stone); }
+.av.s1 { background: var(--slate-bg); color: var(--slate); }
+.av.s2 { background: var(--sage-bg); color: var(--sage); }
+.av.s3 { background: var(--clay-bg); color: var(--clay); }
+.av.s4 { background: #000; color: #fff; }
+.av.big { width: 44px; height: 44px; font-size: 14px; }
+
+/* stage-specific bits */
+.thinking { display: inline-flex; gap: 3px; }
+.thinking i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-3); animation: blink 1.2s infinite; }
+.thinking i:nth-child(2) { animation-delay: .2s } .thinking i:nth-child(3) { animation-delay: .4s }
+@keyframes blink { 0%, 80%, 100% { opacity: .25 } 40% { opacity: 1 } }
+.tags { display: inline-flex; gap: 4px; }
+.tag { font-size: 9px; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink-2); line-height: 1.4; }
+.tag.off { color: var(--ink-3); border-style: dashed; }
+.wave { display: inline-flex; align-items: center; gap: 2px; height: 14px; }
+.wave i { width: 2px; border-radius: 1px; background: var(--live); height: 4px; animation: wave 1s ease-in-out infinite; }
+.wave i:nth-child(1) { animation-delay: 0s } .wave i:nth-child(2) { animation-delay: .15s } .wave i:nth-child(3) { animation-delay: .3s } .wave i:nth-child(4) { animation-delay: .45s } .wave i:nth-child(5) { animation-delay: .6s }
+@keyframes wave { 0%, 100% { height: 3px } 50% { height: 14px } }
+.wave.still i { animation: none; }
+.score { font-weight: 500; font-size: 14px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
+.score.low { color: var(--below); }
+.pie { width: 16px; height: 16px; }
+.pie .bg { fill: var(--line-soft); }
+.pie .fg { fill: currentColor; }
+
+/* ---------- Drawer ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.06); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 540px; max-width: 100vw; background: #fff; border-left: 1px solid var(--line);
+  transform: translateX(100%); transition: transform .32s cubic-bezier(.2,.7,.2,1); display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.04);
+}
+.drawer.open { transform: none; }
+.d-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line-soft); }
+.d-top .btns { display: flex; gap: 6px; }
+.icon-btn { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-2); }
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+.icon-btn svg { width: 15px; height: 15px; }
+.d-body { overflow-y: auto; padding: 22px 24px 40px; scrollbar-width: thin; scrollbar-color: #ddd transparent; }
+.d-head { display: flex; gap: 14px; align-items: center; }
+.d-head h2 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.02em; }
+.d-head p { margin: 3px 0 0; color: var(--ink-2); }
+.takeover { margin-top: 18px; padding: 12px 14px; border: 1px solid var(--clay-bg); background: var(--clay-bg); border-radius: var(--radius); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.takeover.on { display: flex; }
+.takeover .btns { display: flex; gap: 6px; }
+.scorecard { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; margin-top: 22px; padding: 18px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.big { font-size: 40px; font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
+.big small { display: block; font-size: 12px; letter-spacing: 0; color: var(--ink-2); font-weight: 400; margin-top: 4px; }
+.big.low { color: var(--below); }
+.big.none { color: var(--ink-3); }
+.breakdown { display: flex; flex-direction: column; gap: 8px; }
+.brow { display: grid; grid-template-columns: 84px 1fr 28px; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-2); }
+.brow b { font-weight: 500; color: var(--ink); text-align: right; }
+.brow .track { display: block; height: 4px; background: var(--line-soft); border-radius: 2px; overflow: hidden; }
+.brow .fill { display: block; height: 100%; background: var(--stage, var(--ink)); border-radius: 2px; }
+.brow.k1 { --stage: var(--slate); } .brow.k2 { --stage: var(--sage); } .brow.k3 { --stage: var(--clay); }
+.brow.pending b { color: var(--ink-3); }
+.brow.pending .fill { background: var(--ink-3); }
+
+.d-sec { margin-top: 26px; }
+.d-sec h3 { margin: 0 0 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+.d-sec h3 span { color: var(--ink-3); font-weight: 400; font-size: 12px; }
+.d-sec ul { margin: 0; padding-left: 16px; color: var(--ink-2); }
+.d-sec li { margin: 4px 0; }
+.d-sec li b { color: var(--ink); font-weight: 500; }
+.timeline { display: flex; flex-direction: column; }
+.tl { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: baseline; padding: 5px 0; color: var(--ink-2); position: relative; }
+.tl i { width: 6px; height: 6px; border-radius: 50%; background: var(--stage, var(--ink)); justify-self: center; align-self: center; }
+.tl.t0 { --stage: var(--stone); } .tl.t1 { --stage: var(--slate); } .tl.t2 { --stage: var(--sage); } .tl.t3 { --stage: var(--clay); }
+.tl.todo i { background: #fff; border: 1px solid var(--ink-3); }
+.tl.todo { color: var(--ink-3); }
+.tl .when { font-size: 12px; color: var(--ink-3); }
+.social { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line-soft); color: var(--ink-2); }
+.social:first-of-type { border-top: 0; }
+.social .k { width: 22px; height: 22px; border-radius: 6px; background: var(--sage-bg); display: grid; place-items: center; font-size: 10px; font-weight: 600; color: var(--sage); }
+.social b { color: var(--ink); font-weight: 500; }
+.social.none .k { background: none; border: 1px dashed var(--line); color: var(--ink-3); }
+.callbar { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.play { width: 28px; height: 28px; border-radius: 50%; background: var(--clay); color: #fff; display: grid; place-items: center; flex: none; }
+.play svg { width: 11px; height: 11px; margin-left: 2px; }
+.callbar .bars { flex: 1; display: flex; align-items: center; gap: 2px; height: 22px; }
+.callbar .bars i { flex: 1; background: #d0d0d0; border-radius: 1px; }
+.callbar .bars i.on { background: var(--clay); }
+.callbar .dur { color: var(--ink-2); font-size: 12px; }
+.qa { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.qa .q { color: var(--ink-3); font-size: 12px; }
+.qa .a { margin-top: 3px; color: var(--ink); }
+.note { margin-top: 12px; padding: 10px 12px; background: var(--side); border-radius: var(--radius); color: var(--ink-2); }
+.note b { color: var(--ink); font-weight: 500; }
+textarea.notes { width: 100%; min-height: 72px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; resize: vertical; outline: 0; }
+textarea.notes:focus { border-color: var(--ink); }
+
+/* ---------- Create role ---------- */
+.create { display: grid; grid-template-columns: minmax(0, 620px) 1fr; gap: 48px; padding: 0 28px 60px; overflow-y: auto; flex: 1; min-height: 0; }
+.form { display: flex; flex-direction: column; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding: 26px 0; border-top: 1px solid var(--line-soft); }
+.step:first-child { border-top: 0; padding-top: 22px; }
+.step .num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--ink); display: grid; place-items: center; font-size: 11px; font-weight: 500; }
+.step h2 { margin: 0; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; line-height: 22px; }
+.step p.help { margin: 4px 0 14px; color: var(--ink-2); }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { color: var(--ink-2); font-size: 12px; }
+.field input[type=text], .field select, .field textarea { height: 34px; border: 1px solid var(--line); border-radius: 6px; padding: 0 10px; outline: 0; background: #fff; }
+.field textarea { height: auto; padding: 8px 10px; resize: vertical; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; }
+.chip button { color: var(--ink-3); display: grid; }
+.chip button:hover { color: var(--ink); }
+.chip.add { border-style: dashed; color: var(--ink-2); cursor: pointer; }
+.chip.add:hover { color: var(--ink); border-color: var(--ink-3); }
+.switchrow { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--line-soft); }
+.switchrow:first-child { border-top: 0; }
+.switchrow .l b { display: block; font-weight: 500; }
+.switchrow .l span { color: var(--ink-2); font-size: 12px; }
+.switch { width: 32px; height: 18px; border-radius: 999px; background: #d9d9d9; position: relative; transition: background .15s; flex: none; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch.on { background: var(--ink); }
+.switch.on::after { transform: translateX(14px); }
+.weight { display: grid; grid-template-columns: 1fr 44px; gap: 12px; align-items: center; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; background: var(--line); border-radius: 2px; outline: 0; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--ink); cursor: pointer; }
+.weight output { text-align: right; font-weight: 500; }
+.qlist { display: flex; flex-direction: column; }
+.qitem { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line-soft); }
+.qitem:first-child { border-top: 0; }
+.qitem .g { color: var(--ink-3); cursor: grab; padding-top: 1px; }
+.qitem .txt { line-height: 1.4; }
+.qitem .txt small { display: block; color: var(--ink-3); font-size: 11px; margin-top: 2px; }
+.qitem button { color: var(--ink-3); }
+.qitem button:hover { color: var(--ink); }
+.voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.voice { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.voice.sel { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.voice b { font-weight: 500; }
+.voice span { color: var(--ink-2); font-size: 12px; }
+.voice .vplay { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+.voice .vplay .wave i { background: var(--ink-3); animation: none; }
+.voice.sel .vplay .wave i { background: var(--ink); animation: wave 1s ease-in-out infinite; }
+.form-foot { display: flex; gap: 8px; padding-top: 24px; border-top: 1px solid var(--line-soft); }
+
+.preview { position: sticky; top: 0; align-self: start; padding-top: 22px; }
+.preview .cap { color: var(--ink-2); margin: 0 0 12px; }
+.phone { width: 320px; border: 1px solid var(--line); border-radius: 22px; padding: 18px 16px 20px; background: var(--side); }
+.phone .ph-h { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.phone .ph-h b { display: block; font-weight: 500; }
+.phone .ph-h span { color: var(--ink-2); font-size: 12px; }
+.bubbles { display: flex; flex-direction: column; gap: 8px; }
+.bub { max-width: 88%; padding: 8px 11px; border-radius: 14px; line-height: 1.4; }
+.bub.agent { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 4px; align-self: flex-start; }
+.bub.cand { background: var(--ink); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+.bub.sys { align-self: center; color: var(--ink-3); font-size: 11px; padding: 2px 0; }
+
+/* ---------- Drawer v2 ---------- */
+.drawer { width: 640px; }
+.d-top { padding: 12px 20px; }
+.d-top .btns { gap: 6px; }
+.btn.danger:hover { color: #9a3b2e; border-color: #e5c9c3; background: #fbf3f1; }
+.d-body { padding: 0 0 48px; }
+.d-head { padding: 22px 24px 0; }
+.d-head p { margin: 4px 0 0; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 12px 24px 0; color: var(--ink-2); font-size: 12px; }
+.links a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.links a:hover { color: var(--ink); }
+.links svg { width: 12px; height: 12px; }
+.next { margin: 18px 24px 0; padding: 10px 12px; border-radius: var(--radius); display: flex; align-items: center; gap: 10px; background: var(--side); }
+.next .dot { background: var(--stage, var(--ink-3)); }
+.next .dot::after { display: none; }
+.next.live .dot::after { display: block; }
+.next .t { flex: 1; }
+.next .t b { font-weight: 500; }
+.next .btns { display: flex; gap: 6px; }
+.next.you { background: #fff; border: 1px solid var(--ink); }
+.d-tabs { position: sticky; top: 0; background: #fff; display: flex; gap: 18px; padding: 0 24px; margin-top: 22px; border-bottom: 1px solid var(--line-soft); z-index: 2; }
+.d-tabs a { color: var(--ink-3); text-decoration: none; padding: 8px 0 10px; border-bottom: 1px solid transparent; margin-bottom: -1px; }
+.d-tabs a:hover, .d-tabs a.on { color: var(--ink); border-color: var(--ink); }
+.d-part { padding: 0 24px; scroll-margin-top: 40px; }
+.d-part > h2 { font-size: 13px; font-weight: 500; margin: 26px 0 12px; color: var(--ink-3); }
+.verdict { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start; padding: 22px 0 18px; border-bottom: 1px solid var(--line-soft); }
+.verdict .big { font-size: 44px; }
+.verdict .why { padding-top: 4px; }
+.verdict .why b { display: block; font-weight: 500; font-size: 15px; letter-spacing: -0.01em; margin-bottom: 4px; }
+.verdict .why p { margin: 0; color: var(--ink-2); }
+.verdict .breakdown { margin-top: 12px; }
+.pm { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+.pm h4 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.pm h4 i { width: 7px; height: 7px; border-radius: 2px; }
+.pm ul { margin: 0; padding-left: 14px; color: var(--ink); }
+.pm li { margin: 4px 0; }
+.flags { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 14px; }
+.flag { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--side); color: var(--ink-2); }
+.flag.warn { background: #f6ede2; color: var(--below); }
+.rub { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line-soft); }
+.rub:first-of-type { border-top: 0; }
+.rub .v { font-size: 11px; padding: 2px 7px; border-radius: 4px; text-align: center; height: fit-content; margin-top: 1px; }
+.rub .v.met { background: var(--sage-bg); color: var(--sage); }
+.rub .v.partial { background: #f6ede2; color: var(--below); }
+.rub .v.no { background: #f3e6e3; color: #9a3b2e; }
+.rub .v.unclear { background: var(--side); color: var(--ink-3); }
+.rub b { font-weight: 500; }
+.rub .src { color: var(--ink-3); font-size: 11px; margin-left: 8px; }
+.rub .nice { color: var(--ink-3); font-size: 11px; margin-left: 8px; }
+.rub p { margin: 3px 0 0; color: var(--ink-2); }
+.kv { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.kv div { padding: 8px 0; border-top: 1px solid var(--line-soft); }
+.kv div:nth-child(-n+2) { border-top: 0; }
+.kv small { display: block; color: var(--ink-3); font-size: 11px; }
+.kv span { display: block; margin-top: 1px; }
+.kv span.warn { color: var(--below); }
+.attempts { display: flex; gap: 14px; color: var(--ink-3); font-size: 12px; margin: 10px 0 0; }
+.tr { display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 8px 0; }
+.tr .ts { color: var(--ink-3); font-size: 11px; padding-top: 2px; }
+.tr .q { color: var(--ink-3); font-size: 12px; }
+.tr .a { margin-top: 3px; }
+.asked { margin: 0; padding-left: 14px; color: var(--ink-2); }
+.asked li { margin: 4px 0; }
+.hist { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 8px 0; border-top: 1px solid var(--line-soft); }
+.hist:first-of-type { border-top: 0; }
+.hist b { font-weight: 500; }
+.hist span { color: var(--ink-2); }
+.hist .d { color: var(--ink-3); font-size: 12px; text-align: right; }
+.skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.act { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; padding: 6px 0; color: var(--ink-2); }
+.act i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); justify-self: center; align-self: center; }
+.act.you i { background: var(--ink); }
+.act b { color: var(--ink); font-weight: 500; }
+.act .when { color: var(--ink-3); font-size: 12px; }
+.share { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; color: var(--ink-2); font-size: 12px; }
+
+.testrow { display: flex; gap: 6px; width: 320px; }
+.testrow input { flex: 1; height: 30px; border: 1px solid var(--line); border-radius: 6px; padding: 0 10px; outline: 0; background: #fff; }
+.testrow input:focus { border-color: var(--ink); }
+.switchrow select { font-size: 12px; background: #fff; color: var(--ink-2); }
+.phone .bubbles { max-height: 420px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+  .board { grid-template-columns: repeat(5, 220px); overflow-x: auto; }
+  .create { grid-template-columns: 1fr; }
+  .preview { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><i></i>Callscreen</div>
+    <div class="nav-h">Roles</div>
+    <nav id="roles"></nav>
+    <button class="role new" id="newRole"><span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>New role</span></button>
+    <div class="side-foot">
+            <a href="#">Settings</a>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Pipeline view -->
+    <section class="view active" id="pipeline">
+      <header class="top">
+        <div>
+          <h1 id="roleTitle">Backend Engineer</h1>
+          <p class="sub" id="roleSub"></p>
+        </div>
+        <div class="top-actions">
+          <span class="live-pill"><span class="dot"></span><span id="liveCount">3 calls in progress</span></span>
+          <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg><input placeholder="Find a candidate" id="q"></label>
+          <button class="btn" id="pauseBtn">Pause agent</button>
+        </div>
+      </header>
+            <div class="board" id="board"></div>
+    </section>
+
+    <!-- Create role view -->
+    <section class="view" id="create">
+      <header class="top">
+        <div>
+          <h1>New role</h1>
+          <p class="sub">Set up what June checks at each stage and how she talks to candidates.</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn" id="cancelCreate">Cancel</button>
+          <button class="btn primary" id="saveRole">Save and start screening</button>
+        </div>
+      </header>
+      <div class="create">
+        <div class="form">
+
+          <div class="step">
+            <div class="num">1</div>
+            <div>
+              <h2>Role</h2>
+              <p class="help">Candidates see this on the application form and hear it on the call.</p>
+              <div class="field"><label>Title</label><input type="text" value="Product Designer" id="fTitle"></div>
+              <div class="row2">
+                <div class="field"><label>Team</label><input type="text" value="Design"></div>
+                <div class="field"><label>Location</label><input type="text" value="Remote, Europe"></div>
+              </div>
+              <div class="row2">
+                <div class="field"><label>Type</label><select><option selected>Full-time</option><option>Contract</option><option>Part-time</option></select></div>
+                <div class="field"><label>Hiring manager</label><select><option selected>Mark Vasilyev</option><option>Sara Lindgren</option></select></div>
+              </div>
+              <div class="field"><label>Job description</label><textarea rows="5">We're hiring a product designer to own onboarding and activation. You'll work with one PM and three engineers, run your own research, and ship weekly. 4+ years in product design, at least one 0→1 launch you can show, and comfort prototyping in Figma. Bonus if you've worked in B2B SaaS.</textarea></div>
+              <div class="chips" style="margin-bottom:14px"><button class="chip add" id="suggest">Suggest must-haves from the description</button></div>
+              <div class="field">
+                <label>Where candidates come from</label>
+                <div>
+                  <div class="switchrow"><div class="l"><b>Careers page link</b><span>callscreen.com/actum/product-designer · <a href="#" style="color:inherit">Copy</a></span></div><button class="switch on" aria-pressed="true"></button></div>
+                  <div class="switchrow"><div class="l"><b>Greenhouse</b><span>New applicants sync in, stages sync back</span></div><button class="switch on" aria-pressed="true"></button></div>
+                  <div class="switchrow"><div class="l"><b>LinkedIn Easy Apply</b><span>Connect LinkedIn Recruiter to enable</span></div><button class="switch" aria-pressed="false"></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="num">2</div>
+            <div>
+              <h2>Application screen</h2>
+              <p class="help">June reads the résumé and the form answers. Knockouts reject on the spot, must-haves are scored, nice-to-haves break ties.</p>
+              <div class="field">
+                <label>Knockout questions</label>
+                <div class="qlist">
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Are you legally able to work in the EU without sponsorship?<small>Must answer: Yes</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Can you start within 3 months?<small>Must answer: Yes</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Link to your portfolio<small>Must be provided</small></div><button aria-label="Remove">×</button></div>
+                </div>
+                <button class="chip add" style="align-self:flex-start">+ Add knockout</button>
+              </div>
+              <div class="field">
+                <label>Must-haves</label>
+                <div class="chips" id="musts">
+                  <span class="chip">4+ years product design <button aria-label="Remove">×</button></span>
+                  <span class="chip">Shipped a 0→1 product <button aria-label="Remove">×</button></span>
+                  <span class="chip">Figma prototyping <button aria-label="Remove">×</button></span>
+                  <button class="chip add" id="addMust">+ Add</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Nice-to-haves</label>
+                <div class="chips">
+                  <span class="chip">B2B SaaS <button aria-label="Remove">×</button></span>
+                  <span class="chip">Works close to engineers <button aria-label="Remove">×</button></span>
+                  <button class="chip add">+ Add</button>
+                </div>
+              </div>
+              <div class="field"><label>Weight in final score</label><div class="weight"><input type="range" min="0" max="100" value="30" oninput="this.nextElementSibling.value=this.value+'%'"><output>30%</output></div></div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="num">3</div>
+            <div>
+              <h2>Socials</h2>
+              <p class="help">Public profiles only. June notes what she found and never messages anyone.</p>
+              <div>
+                <div class="switchrow"><div class="l"><b>Portfolio site</b><span>Case studies, depth of process, recency</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>Dribbble</b><span>Craft, consistency</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>LinkedIn</b><span>Tenure, titles, gaps</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>GitHub</b><span>Only relevant for design engineers</span></div><button class="switch" aria-pressed="false"></button></div>
+                <div class="switchrow"><div class="l"><b>X</b><span>Public voice, how they talk about work</span></div><button class="switch" aria-pressed="false"></button></div>
+              </div>
+              <div class="field" style="margin-top:14px">
+                <label>Raise a flag when</label>
+                <div class="chips">
+                  <span class="chip">Résumé and LinkedIn disagree <button aria-label="Remove">×</button></span>
+                  <span class="chip">Gap over 6 months <button aria-label="Remove">×</button></span>
+                  <span class="chip">Portfolio older than 2 years <button aria-label="Remove">×</button></span>
+                  <button class="chip add">+ Add</button>
+                </div>
+              </div>
+              <div class="field"><label>Weight in final score</label><div class="weight"><input type="range" min="0" max="100" value="20" oninput="this.nextElementSibling.value=this.value+'%'"><output>20%</output></div></div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="num">4</div>
+            <div>
+              <h2>Phone call</h2>
+              <p class="help">June calls everyone who passes the first two stages. About fifteen minutes each.</p>
+              <div class="row2">
+                <div class="field"><label>Agent name</label><input type="text" value="June" id="fAgent"></div>
+                <div class="field"><label>Language</label><select><option selected>English, match candidate's accent</option><option>English (UK)</option><option>Portuguese</option><option>German</option></select></div>
+              </div>
+              <div class="field">
+                <label>Voice</label>
+                <div class="voices">
+                  <button class="voice sel"><b>June</b><span>Warm, unhurried</span><span class="vplay"><span class="wave"><i></i><i></i><i></i><i></i><i></i></span>Preview</span></button>
+                  <button class="voice"><b>Adrian</b><span>Direct, low</span><span class="vplay"><span class="wave"><i></i><i></i><i></i><i></i><i></i></span>Preview</span></button>
+                  <button class="voice"><b>Sana</b><span>Bright, quick</span><span class="vplay"><span class="wave"><i></i><i></i><i></i><i></i><i></i></span>Preview</span></button>
+                </div>
+              </div>
+              <div class="field"><label>Tone</label><select><option selected>Friendly and brief, like a good recruiter</option><option>Formal</option><option>Casual</option></select></div>
+              <div class="field"><label>Opening line</label><textarea rows="2" id="fOpener">Hi, this is June calling from Actum about the Product Designer role you applied for. Is now still a good time for a fifteen-minute chat?</textarea></div>
+              <div class="field">
+                <label>Questions, in order</label>
+                <div class="qlist">
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Tell me about the last thing you shipped that you're proud of. What was your part?<small>Good answer: names the outcome, says "I" not "we"</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Walk me through how you decide when a design is done.<small>Good answer: judgement over process, mentions shipping small</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">How do you work with engineers day to day?<small>Good answer: in standup, comfortable in code or PRs</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Salary expectation, notice period, earliest start, and any other processes you're in?<small>Always asked, fills the Logistics card</small></div><button aria-label="Remove">×</button></div>
+                </div>
+                <button class="chip add" style="align-self:flex-start">+ Add question</button>
+              </div>
+              <div class="row2">
+                <div class="field"><label>Follow-ups per question</label><select><option>None, just ask</option><option selected>Up to 2, if the answer is vague</option><option>Up to 4, dig in</option></select></div>
+                <div class="field"><label>Call length</label><select><option>Up to 10 minutes</option><option selected>Up to 15 minutes</option><option>Up to 20 minutes</option></select></div>
+              </div>
+              <div class="field">
+                <label>What June can answer if asked</label>
+                <div class="qlist">
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Salary range<small>€70k–85k plus equity. Share the range if asked.</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Remote policy<small>Remote anywhere in the EU, two team weeks a year in Lisbon.</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Team<small>One PM, three engineers, you'd be the first designer. Reports to Mark.</small></div><button aria-label="Remove">×</button></div>
+                  <div class="qitem"><span class="g">⋮⋮</span><div class="txt">Process after this call<small>45-min portfolio review with Mark, then a half-day paid design exercise. Two weeks end to end.</small></div><button aria-label="Remove">×</button></div>
+                </div>
+                <button class="chip add" style="align-self:flex-start">+ Add</button>
+              </div>
+              <div class="field">
+                <label>Scheduling</label>
+                <div>
+                  <div class="switchrow"><div class="l"><b>Text before calling</b><span>"June from Callscreen will call tomorrow at 14:00. Reply with a better time if needed."</span></div><button class="switch on" aria-pressed="true"></button></div>
+                  <div class="switchrow"><div class="l"><b>Call window</b><span>Candidate's local 10:00 to 18:00, weekdays</span></div><select style="height:28px;border:1px solid var(--line);border-radius:6px;padding:0 8px"><option selected>10:00–18:00 local</option><option>Any time</option></select></div>
+                  <div class="switchrow"><div class="l"><b>Retry if no answer</b><span>Two more attempts, a day apart, voicemail on the last one</span></div><button class="switch on" aria-pressed="true"></button></div>
+                  <div class="switchrow"><div class="l"><b>Recording disclosure</b><span>June says the call is recorded and asks for consent. Required.</span></div><button class="switch on" aria-pressed="true" disabled style="opacity:.5"></button></div>
+                  <div class="switchrow"><div class="l"><b>If the candidate asks for a human</b><span>June takes a message and flags the profile for you</span></div><select style="height:28px;border:1px solid var(--line);border-radius:6px;padding:0 8px"><option selected>Take a message</option><option>Transfer to me</option></select></div>
+                </div>
+              </div>
+              <div class="field" style="margin-top:14px"><label>Weight in final score</label><div class="weight"><input type="range" min="0" max="100" value="50" oninput="this.nextElementSibling.value=this.value+'%'"><output>50%</output></div></div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="num">5</div>
+            <div>
+              <h2>Score and hand-off</h2>
+              <p class="help">What happens once June has a final score.</p>
+              <div class="field"><label>Pass threshold</label><div class="weight"><input type="range" min="0" max="100" value="70" oninput="this.nextElementSibling.value=this.value"><output>70</output></div></div>
+              <div>
+                <div class="switchrow"><div class="l"><b>Book an interview above threshold</b><span>45 min on Mark's calendar, candidate picks the slot</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>Decline below threshold</b><span>Sent 24 hours later, so you can override</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>Post summaries to Slack</b><span>#hiring-design, one message per scored candidate</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>Sync stage to Greenhouse</b><span>Scored → "Phone screen complete"</span></div><button class="switch on" aria-pressed="true"></button></div>
+                <div class="switchrow"><div class="l"><b>Ask me before every call</b><span>Off means June calls as soon as a candidate passes socials</span></div><button class="switch" aria-pressed="false"></button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-foot">
+            <button class="btn primary">Save and start screening</button>
+            <button class="btn">Save as draft</button>
+          </div>
+        </div>
+
+        <aside class="preview">
+          <p class="cap">How the call will go</p>
+          <div class="phone">
+            <div class="ph-h"><span class="av s3">J</span><div><b id="pvAgent">June</b><span>Callscreen · Product Designer</span></div></div>
+            <div class="bubbles">
+              <div class="bub sys">Calling Aiko Tanaka · 14:02 local</div>
+              <div class="bub agent" id="pvOpener">Hi, this is June calling from Actum about the Product Designer role you applied for. Is now still a good time for a fifteen-minute chat?</div>
+              <div class="bub cand">Sure, go ahead.</div>
+              <div class="bub agent">Quick note, this call is recorded so the team can listen back. Okay with you?</div>
+              <div class="bub cand">Yes, fine.</div>
+              <div class="bub agent">Great. Tell me about the last thing you shipped that you're proud of. What was your part?</div>
+              <div class="bub cand">The onboarding redesign at Linear. I owned it end to end, from research to the final handoff…</div>
+              <div class="bub sys">…</div>
+              <div class="bub cand">What's the salary range?</div>
+              <div class="bub agent">Seventy to eighty-five thousand euros, plus equity.</div>
+              <div class="bub agent">That's everything from me. Mark will be in touch within two days. Thanks, Aiko.</div>
+            </div>
+          </div>
+          <div class="testcall">
+            <p class="cap" style="margin-top:22px">Try it yourself</p>
+            <div class="testrow"><input type="text" value="+351 91 234 5678" aria-label="Your phone number"><button class="btn primary">Call me</button></div>
+            <p class="cap" style="margin:8px 0 0;font-size:12px">June calls you as if you'd applied. Nothing is scored.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Candidate profile">
+  <div class="d-top">
+    <button class="icon-btn" id="closeDrawer" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    <div class="btns">
+      <button class="btn" id="takeBtn">Take over</button>
+      <button class="btn danger" id="rejectBtn">Reject</button>
+      <button class="btn primary" id="advanceBtn">Advance</button>
+      <button class="icon-btn" aria-label="More"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="13" cy="8" r="1.3"/></svg></button>
+    </div>
+  </div>
+  <div class="d-body" id="dBody"></div>
+</aside>
+
+<script>
+// ---------- Data ----------
+const STAGES = ['applied','application','socials','call','scored'];
+const STAGE_LABEL = { applied:'Applied', application:'Application', socials:'Socials', call:'Phone call', scored:'Scored' };
+const STAGE_PAST = ['applied','screened','socials checked','called','scored'];
+
+const ROLES = [
+  { id:'be', name:'Backend Engineer', team:'Platform', opened:'12 days ago', threshold:70, agent:'June' },
+  { id:'pd', name:'Product Designer', team:'Design', opened:'5 days ago', threshold:70, agent:'June' },
+  { id:'ae', name:'Account Executive', team:'Sales', opened:'19 days ago', threshold:65, agent:'Adrian' },
+];
+
+const NAMES = ["Maya Lindqvist","Tomás Ferreira","Priya Raman","Jonah Whitfield","Aiko Tanaka","Daniel Okafor","Sofia Marchetti","Lucas Bernard","Hannah Kim","Ibrahim Saleh","Elena Petrova","Marcus Bell","Noor Haddad","Felix Wagner","Grace O'Neill","Rafael Costa","Yuki Sato","Amara Diallo","Oliver Brandt","Leila Nasser","Kai Nakamura","Isabel Ruiz","Ethan Cole","Zara Ahmed","Mateo Alvarez","Chloe Dubois","Ravi Menon","Nina Larsen","Samuel Adeyemi","Ingrid Holm","Diego Morales","Anya Volkov","Ben Carter","Mei Chen","Omar Farouk","Freya Jensen","Theo Martin","Layla Hassan","Victor Silva","Emma Fischer","Jasper Lee","Rosa Delgado","Arjun Mehta","Klara Novak","Kwame Mensah","Sienna Park","Luca Romano","Hana Yoshida"];
+const LOCS = ["Lisbon","Berlin","London","Toronto","Austin","Amsterdam","São Paulo","Singapore","Warsaw","Dublin","New York","Lagos","Tokyo","Madrid","Stockholm","Bangalore"];
+const SOURCES = ["LinkedIn","Careers page","Referral","Wellfound","X"];
+
+const CONTENT = {
+  be: {
+    companies:['Stripe','Datadog','a Series B fintech','Shopify','Cloudflare','Klarna','Monzo','Vercel','Notion'],
+    areas:['billing infrastructure','event pipelines','auth and identity','search infra','the payments ledger','internal platform tooling','the public API'],
+    stacks:['Go, Postgres, Kafka','TypeScript, Node, Redis','Rust, gRPC, Postgres','Python, Django, Celery','Java, Spring, Kubernetes','Elixir, Phoenix'],
+    social:[
+      ['gh','GitHub','{n} public repos, {s} stars. Steady commits for 3 years, mostly to a Postgres tooling project. Clean READMEs.'],
+      ['in','LinkedIn','Tenure matches the résumé. One 4-month gap in 2023, worth asking about.'],
+      ['x','X','Posts occasionally about database internals. Nothing concerning.'],
+    ],
+    q:[
+      ['Walk me through a system you built that outgrew its first design.', 'The ledger. We started with one Postgres table and row locks. At about 40k writes a minute the locks were the bottleneck, so I split hot accounts into shards and moved reconciliation to a nightly job. It took two quarters and I would do the sharding earlier next time.'],
+      ['What does on-call look like on your team right now?', 'One week in six. Pages are down to two or three a week since we added budget alerts, most of them are noisy Kafka lag warnings that I want to fix.'],
+      ['Why leave now?', 'Honestly, the team is shrinking and I want to build with people again. I read about what you are doing with voice and it is the first thing in a while that made me curious.'],
+    ],
+    note:['Specific about tradeoffs, owned the mistakes. Clear communicator.', 'Solid technically but vague on ownership. Team results, not personal.', 'Strong on systems, hesitated on relocation and start date.', 'Talked fast and in generalities. Could not name a concrete failure.'],
+  },
+  pd: {
+    companies:['Linear','Figma','a seed-stage fintech','Spotify','Monzo','Miro','Intercom','Airbnb'],
+    areas:['onboarding','the mobile app','design systems','growth experiments','the editor','checkout'],
+    stacks:['Figma, Framer, light React','Figma, Origami','Figma, Protopie','Figma, Webflow, CSS'],
+    social:[
+      ['◎','Portfolio','4 case studies, latest from this year. Shows research, iterations and what shipped. Strong.'],
+      ['dr','Dribbble','120 shots, mostly visual explorations. Not much product thinking, but craft is high.'],
+      ['in','LinkedIn','Titles match. Two roles under 12 months, worth a question.'],
+    ],
+    q:[
+      ['Tell me about the last thing you shipped that you are proud of. What was your part?', 'The onboarding redesign. I ran the research, did the flows, and paired with one engineer for three weeks. Activation went from 31% to 44%.'],
+      ['How do you decide when a design is done?', 'When the next iteration would cost more than it would teach us. I try to ship a smaller version and watch what people actually do.'],
+      ['How do you work with engineers day to day?', 'I sit in standup, I write the tickets with them, and I am comfortable opening a PR for spacing and copy.'],
+    ],
+    note:['Specific, owns outcomes, comfortable with engineers.', 'Beautiful work, but every answer was about visuals. Thin on product reasoning.', 'Good process, quiet on results. Ask for numbers.', 'Portfolio was strongest signal; call added little.'],
+  },
+  ae: {
+    companies:['Gong','Salesforce','a Series A devtools startup','HubSpot','Deel','Rippling','Brex'],
+    areas:['mid-market EMEA','enterprise new logo','SMB inbound','partnerships'],
+    stacks:['Salesforce, Outreach','HubSpot, Apollo','Salesforce, Gong'],
+    social:[
+      ['in','LinkedIn','Consistent quota claims across roles. 3 roles in 5 years, normal for sales.'],
+      ['x','X','Active, posts about sales craft. Professional tone.'],
+      ['◎','Personal site','None found.'],
+    ],
+    q:[
+      ['Tell me about your biggest closed deal last year, start to finish.', 'A 180k ARR deal with a logistics company. Found the champion at a conference, got to the CFO in three weeks. The hard part was procurement, I brought our legal in early.'],
+      ['What was your quota and attainment the last two years?', '1.1M and I hit 118%. The year before 900k at 94%, I lost a big one in Q4.'],
+      ['How do you handle a deal that goes quiet?', 'I go back to the pain we agreed on, not the product. If there is no pain I let it go and put it on a 90-day nurture.'],
+    ],
+    note:['Numbers were specific and consistent with LinkedIn. High energy without being pushy.', 'Overstated attainment compared with earlier answer. Follow up.', 'Strong on process, fewer specifics on deals.', 'Very polished, hard to tell what is real.'],
+  },
+};
+
+const EXTRA = {
+  be: {
+    titles: ['Senior Backend Engineer','Backend Engineer','Staff Engineer','Software Engineer II'],
+    rubric: [
+      ['5+ years backend', 'must', 'résumé', ['{yrs} years across two companies, the last three at {company}.', '{yrs} years, but most of it full-stack with light backend.', 'Résumé shows {yrs} years, mostly frontend.']],
+      ['Owned a production system end to end', 'must', 'call 2:14', ['"I owned {area} from the first design doc to on-call."', '"I was one of three people on {area}." Shared ownership.', 'Could not name a system they owned alone.']],
+      ['Postgres at scale', 'must', 'GitHub', ['Repos and the call both point to real Postgres work: sharding, partitioning, query plans.', 'Uses Postgres, but scale questions got general answers.', 'No Postgres in résumé, repos, or call.']],
+      ['EU timezone overlap', 'must', 'call 5:40', ['"{loc} is home, I am not planning to move."', 'Willing to shift hours, currently 6h off.', 'Would need 9h+ overlap shift. Said no.']],
+      ['Go or Rust', 'nice', 'résumé', ['Go daily for four years.', 'Some Go, mostly Python.', 'Neither.']],
+      ['Payments domain', 'nice', 'résumé', ['Two years on {area} at {company}.', 'Adjacent: billing reconciliation tooling.', 'None.']],
+    ],
+    history: [['Senior Backend Engineer','{company}','2022 – now'],['Backend Engineer','Farfetch','2019 – 2022'],['Software Engineer','Talkdesk','2017 – 2019']],
+    edu: 'BSc Computer Science, Instituto Superior Técnico, 2017',
+    skills: ['Go','Postgres','Kafka','Kubernetes','gRPC','Terraform','Redis','Python'],
+    asked: ['How big is the platform team, and who would I report to?','Is the role open to fully remote inside the EU?','What does the rest of the process look like?'],
+    strengths: ['Specific about tradeoffs, owns mistakes without prompting.','Postgres depth is real, backed by public repos.','Wants to leave for the right reasons: a shrinking team, not a grievance.'],
+    concerns: ['Four-month gap in 2023 not explained on the call.','Salary expectation is at the top of the band.'],
+    logistics: { salary: '€95k–105k', start: '1 October', notice: '2 months', auth: 'EU citizen', remote: 'Remote, in {loc}', other: '2 other processes, one at final stage' },
+  },
+  pd: {
+    titles: ['Senior Product Designer','Product Designer','Lead Product Designer','Design Engineer'],
+    rubric: [
+      ['4+ years product design', 'must', 'résumé', ['{yrs} years in product roles at {company} and earlier.', '{yrs} years, half of it in visual and brand.', 'Mostly brand design, under 2 years in product.']],
+      ['Shipped a 0→1 product', 'must', 'portfolio', ['Case study on {area} covers research through launch metrics.', 'Portfolio shows launches, but always as part of a bigger team.', 'No 0→1 work in portfolio or on the call.']],
+      ['Figma prototyping', 'must', 'call 4:02', ['Described interactive prototypes used in usability tests.', 'Uses Figma daily, prototyping mostly static.', 'Works in Sketch, no Figma prototyping.']],
+      ['Portfolio link', 'must', 'application', ['Portfolio linked, 4 case studies, latest this year.', 'Portfolio linked, last updated 2023.', 'No portfolio provided.']],
+      ['Works close to engineers', 'nice', 'call 7:20', ['"I open PRs for spacing and copy."', 'Attends standup, hands off in Figma.', 'Works through a PM only.']],
+      ['B2B SaaS', 'nice', 'résumé', ['Three years at {company}, B2B.', 'Consumer mostly, one B2B project.', 'Consumer only.']],
+    ],
+    history: [['Senior Product Designer','{company}','2022 – now'],['Product Designer','Typeform','2019 – 2022'],['UI Designer','Freelance','2017 – 2019']],
+    edu: 'BA Interaction Design, Umeå Institute of Design, 2017',
+    skills: ['Figma','Prototyping','User research','Design systems','Framer','CSS'],
+    asked: ['How many designers are on the team?','Do designers own research here or is there a research team?','What is the design review culture like?'],
+    strengths: ['Owns outcomes, quotes activation numbers without being asked.','Comfortable with engineers, opens PRs.','Portfolio is current and shows process, not just finals.'],
+    concerns: ['Two roles under 12 months in a row.','Little B2B experience.'],
+    logistics: { salary: '€70k–80k', start: '15 November', notice: '1 month', auth: 'EU citizen', remote: 'Hybrid, {loc}', other: 'One other process, early stage' },
+  },
+  ae: {
+    titles: ['Account Executive','Senior Account Executive','Mid-Market AE','Enterprise AE'],
+    rubric: [
+      ['3+ years closing', 'must', 'résumé', ['{yrs} years carrying a quota at {company}.', '{yrs} years, 1 of them as SDR.', 'Only SDR and BDR roles.']],
+      ['Quota attainment 100%+', 'must', 'call 3:10', ['"1.1M quota, 118% last year." Consistent with LinkedIn.', 'Hit 94% one year and 118% the next.', 'Would not give numbers.']],
+      ['Sold to technical buyers', 'must', 'call 5:02', ['Sold devtools to engineering leaders for 2 years.', 'Sold to ops, some technical evaluation involved.', 'Sold to HR and finance buyers only.']],
+      ['Deal size €50k+', 'must', 'call 1:40', ['Average deal 180k ARR.', 'Average 40k, largest 120k.', 'SMB deals under 10k.']],
+      ['Outbound heavy', 'nice', 'call 6:15', ['70% self-sourced pipeline.', 'Half inbound, half outbound.', 'Inbound only.']],
+      ['EMEA experience', 'nice', 'résumé', ['EMEA mid-market at {company}.', 'UK only.', 'US only.']],
+    ],
+    history: [['Account Executive','{company}','2022 – now'],['SDR then AE','Pipedrive','2019 – 2022'],['Sales Associate','Enterprise Rent-A-Car','2018 – 2019']],
+    edu: 'BA Business, University of Amsterdam, 2018',
+    skills: ['Outbound','Salesforce','Gong','MEDDIC','Negotiation','Demoing'],
+    asked: ['What is the OTE split?','How much of pipeline is inbound today?','Who would I be selling with, is there an SE?'],
+    strengths: ['Numbers were specific and matched LinkedIn.','Handles objections by going back to pain, not features.','High energy without being pushy.'],
+    concerns: ['OTE expectation is above the band.','Only one full year above quota.'],
+    logistics: { salary: '€120k OTE, 50/50', start: '1 November', notice: '1 month', auth: 'EU citizen', remote: 'Hybrid, {loc}', other: 'Two other processes' },
+  },
+};
+
+// deterministic rng
+function rng(seed){ let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+function makeCandidates(role, seed){
+  const r = rng(seed);
+  const pick = a => a[Math.floor(r()*a.length)];
+  const names = NAMES.slice().sort(() => r() - .5);
+  const dist = { applied:6, application:5, socials:4, call:3, scored:9 };
+  const list = [];
+  let i = 0;
+  for (const st of STAGES) {
+    for (let k = 0; k < dist[st]; k++) {
+      const c = CONTENT[role.id];
+      const app = 55 + Math.floor(r()*42), soc = 40 + Math.floor(r()*55), call = 45 + Math.floor(r()*53);
+      const sIdx = STAGES.indexOf(st);
+      const cand = {
+        id: role.id + '-' + i, name: names[i], loc: pick(LOCS), source: pick(SOURCES),
+        ago: sIdx === 0 ? 1 + Math.floor(r()*40) : 60 + Math.floor(r()*60*40),
+        stage: st, app, soc, call,
+        live: st === 'call' && k < 2,
+        callDur: 120 + Math.floor(r()*400),
+        yrs: 3 + Math.floor(r()*9), company: pick(c.companies), area: pick(c.areas), stack: pick(c.stacks),
+        repos: 8 + Math.floor(r()*60), stars: Math.floor(r()*900),
+        socialsFound: [r() > .1, r() > .25, r() > .55],
+        noteIdx: Math.floor(r()*c.note.length),
+        taken: false,
+      };
+      cand.final = Math.round(app*.3 + soc*.2 + call*.5);
+      list.push(cand); i++;
+    }
+  }
+  return list;
+}
+
+const state = {
+  roleId: 'be',
+  data: Object.fromEntries(ROLES.map((r, i) => [r.id, makeCandidates(r, 1234 + i*97)])),
+  entered: new Set(),
+  paused: false,
+  open: null,
+  nameIdx: 0,
+};
+
+// ---------- Helpers ----------
+const $ = s => document.querySelector(s);
+const initials = n => n.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+const fmtAgo = m => m < 60 ? `${m}m` : m < 60*24 ? `${Math.floor(m/60)}h` : `${Math.floor(m/1440)}d`;
+const fmtDur = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const role = () => ROLES.find(r => r.id === state.roleId);
+const cands = () => state.data[state.roleId];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+function arc(v){
+  const a = Math.min(99.9, v) / 100 * 2 * Math.PI, R = 8;
+  const x = 8 + R*Math.sin(a), y = 8 - R*Math.cos(a), big = v > 50 ? 1 : 0;
+  return `<svg class="pie" viewBox="0 0 16 16"><circle class="bg" cx="8" cy="8" r="8"/><path class="fg" d="M8 8 L8 0 A8 8 0 ${big} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z"/></svg>`;
+}
+const wave = still => `<span class="wave${still?' still':''}"><i></i><i></i><i></i><i></i><i></i></span>`;
+
+// ---------- Render: sidebar ----------
+function renderRoles(){
+  $('#roles').innerHTML = ROLES.map(r => {
+    const n = state.data[r.id].filter(c => c.stage !== 'scored').length;
+    return `<button class="role${r.id===state.roleId?' active':''}" data-role="${r.id}"><span>${r.name}</span><span class="n">${n}</span></button>`;
+  }).join('');
+}
+
+// ---------- Render: pipeline ----------
+function renderTop(){
+  const r = role(); const list = cands();
+  $('#roleTitle').textContent = r.name;
+  $('#roleSub').textContent = `${r.team} · opened ${r.opened} · ${list.length} applications`;
+  const live = list.filter(c => c.stage === 'call' && c.live).length;
+  $('#liveCount').textContent = live === 1 ? '1 call in progress' : `${live} calls in progress`;
+}
+
+function cardRight(c){
+  const i = STAGES.indexOf(c.stage);
+  if (i === 0) return `<span>${fmtAgo(c.ago)}</span>`;
+  if (i === 1) return c.app % 3 === 0 ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<span>${c.app}</span>`;
+  if (i === 2) {
+    const keys = CONTENT[state.roleId].social;
+    return `<span class="tags">${keys.map((k, j) => `<span class="tag${c.socialsFound[j]?'':' off'}">${k[0]}</span>`).join('')}</span>`;
+  }
+  if (i === 3) return c.live ? `${wave(false)}<span class="dur" data-id="${c.id}">${fmtDur(c.callDur)}</span>` : `<span>${c.taken ? 'yours' : 'queued'}</span>`;
+  const low = c.final < role().threshold;
+  return `<span class="score${low?' low':''}">${c.final}${arc(c.final)}</span>`;
+}
+
+function cardMeta(c){
+  const i = STAGES.indexOf(c.stage);
+  if (i === 0) return `${c.source} · ${c.loc}`;
+  if (i === 1) return c.app % 3 === 0 ? 'Reading résumé' : `${c.yrs} yrs · ${c.company}`;
+  if (i === 2) return `${c.socialsFound.filter(Boolean).length} of 3 profiles found`;
+  if (i === 3) return c.live ? `${role().agent} is on the call` : c.taken ? 'You are calling' : 'Calls at 14:00 local';
+  return c.taken ? 'You took over' : `Called ${fmtAgo(c.ago)} ago · ${fmtDur(c.callDur)}`;
+}
+
+function card(c){
+  const i = STAGES.indexOf(c.stage);
+  const enter = state.entered.has(c.id) ? ' enter' : '';
+  return `<button class="card${enter}" data-id="${c.id}">
+    <span class="av s${i}">${initials(c.name)}</span>
+    <span class="who"><span class="name">${esc(c.name)}</span><span class="meta">${cardMeta(c)}</span></span>
+    <span class="side-r">${cardRight(c)}</span>
+  </button>`;
+}
+
+function renderBoard(){
+  const q = ($('#q').value || '').toLowerCase();
+  const list = cands().filter(c => !q || c.name.toLowerCase().includes(q));
+  const thr = role().threshold;
+  $('#board').innerHTML = STAGES.map((s, i) => {
+    let items = list.filter(c => c.stage === s);
+    let body;
+    if (s === 'scored') {
+      items.sort((a,b) => b.final - a.final);
+      const hi = items.filter(c => c.final >= thr), lo = items.filter(c => c.final < thr);
+      body = hi.map(card).join('') + (lo.length ? `<div class="rule">below ${thr}</div>` + lo.map(card).join('') : '');
+    } else if (s === 'call') {
+      items.sort((a,b) => (b.live|0) - (a.live|0));
+      body = items.map(card).join('');
+    } else {
+      items.sort((a,b) => a.ago - b.ago);
+      body = items.map(card).join('');
+    }
+    if (!items.length) body = `<div class="empty">Nobody here right now</div>`;
+    return `<div class="col s${i}"><div class="col-h"><span class="t">${STAGE_LABEL[s]}</span><span class="c">${items.length}</span></div><div class="col-body">${body}</div></div>`;
+  }).join('');
+  state.entered.clear();
+}
+
+function renderAll(){ renderRoles(); renderTop(); renderBoard(); }
+
+// ---------- Drawer ----------
+function hash(str){ let h = 0; for (const ch of str) h = (h*31 + ch.charCodeAt(0)) >>> 0; return h; }
+const pr = (c, k) => ((hash(c.id) * (k+3) * 2654435761) >>> 0) % 1000 / 1000;
+const fill = (t, c) => t.replace(/\{yrs\}/g, c.yrs).replace(/\{company\}/g, c.company).replace(/\{area\}/g, c.area).replace(/\{loc\}/g, c.loc);
+
+function openDrawer(id){
+  const c = cands().find(x => x.id === id); if (!c) return;
+  state.open = id;
+  const r = role(); const ct = CONTENT[r.id]; const ex = EXTRA[r.id] || EXTRA.pd;
+  const i = STAGES.indexOf(c.stage);
+  const has = k => i >= k;
+  const low = c.final < r.threshold;
+  const first = c.name.split(' ')[0];
+  const title = ex.titles[hash(c.id) % ex.titles.length];
+  const email = c.name.toLowerCase().replace(/[^a-z ]/g,'').replace(' ', '.') + '@gmail.com';
+  const tz = { Lisbon:'GMT+1', Berlin:'GMT+2', London:'GMT+1', Toronto:'GMT-4', Austin:'GMT-5', Amsterdam:'GMT+2', 'São Paulo':'GMT-3', Singapore:'GMT+8', Warsaw:'GMT+2', Dublin:'GMT+1', 'New York':'GMT-4', Lagos:'GMT+1', Tokyo:'GMT+9', Madrid:'GMT+2', Stockholm:'GMT+2', Bangalore:'GMT+5:30' }[c.loc] || 'GMT';
+
+  // --- next step line ---
+  let next, nextBtns = '', nextClass = `s${i}`;
+  if (c.taken) { next = `<b>You own this candidate.</b> ${r.agent} won't contact ${first} again.`; nextBtns = `<button class="btn primary">Call now</button><button class="btn">Schedule</button>`; nextClass = 'you'; }
+  else if (i === 0) next = `<b>${r.agent} is reading the application.</b> Usually done within the hour.`;
+  else if (i === 1) next = `<b>Next: socials check.</b> Application scored ${c.app}, above the bar.`;
+  else if (i === 2) { next = `<b>Next: ${r.agent} calls today at 14:00 ${first}'s time.</b> A summary lands here within minutes of the call.`; nextBtns = `<button class="btn">Reschedule</button>`; }
+  else if (i === 3 && c.live) { next = `<b>${r.agent} is on the phone with ${first} now.</b> ${fmtDur(c.callDur)} so far.`; nextBtns = `<button class="btn">Listen in</button>`; nextClass += ' live'; }
+  else if (i === 3) { next = `<b>Call queued for 14:00 ${first}'s time.</b> Text sent yesterday, ${first} confirmed.`; nextBtns = `<button class="btn">Reschedule</button>`; }
+  else if (!low) { next = `<b>Waiting on you.</b> Above the bar. Book the interview with ${title.includes('Design') ? 'Sara' : 'Mark'}?`; nextBtns = `<button class="btn primary">Book interview</button>`; nextClass = 'you'; }
+  else { next = `<b>Decline email goes out in 18 hours</b> unless you override.`; nextBtns = `<button class="btn">Keep in process</button>`; }
+
+  // --- verdict ---
+  const label = !has(4) ? (i === 3 && c.live ? 'On the call now' : 'Not scored yet') : low ? 'Below the bar' : c.final >= 85 ? 'Strong match' : 'Worth a look';
+  const why = !has(4) ? `${r.agent} writes a summary here after the call.` :
+    low ? `${ex.concerns[0]} ${ex.strengths[1]}` : `${ex.strengths[0]} ${ex.concerns[pr(c,9) > .5 ? 0 : 1]}`;
+  const brow = (l, v, ok, k) => `<div class="brow k${k}${ok?'':' pending'}"><span>${l}</span><span class="track"><span class="fill" style="width:${ok?v:0}%"></span></span><b>${ok?v:'–'}</b></div>`;
+
+  // --- rubric ---
+  const verdictFor = (k, must) => { const x = pr(c, k) * 0.6 + (c.final - 55) / 60; return x > .55 ? 'met' : x > .3 ? 'partial' : 'no'; };
+  const rubric = ex.rubric.map((row, k) => {
+    const [name, kind, src, texts] = row;
+    if (!has(1) || (src.startsWith('call') && !has(4)) || (src === 'GitHub' && !has(3)) || (src === 'portfolio' && !has(3)))
+      return `<div class="rub"><span class="v unclear">Not yet</span><div><b>${name}</b><span class="nice">${kind === 'nice' ? 'nice to have' : ''}</span><p>Checked at the ${src.startsWith('call') ? 'call' : src} stage.</p></div></div>`;
+    const v = verdictFor(k, kind === 'must');
+    const txt = fill(texts[v === 'met' ? 0 : v === 'partial' ? 1 : 2], c);
+    return `<div class="rub"><span class="v ${v}">${v === 'met' ? 'Met' : v === 'partial' ? 'Partial' : 'Not met'}</span><div><b>${name}</b>${kind === 'nice' ? '<span class="nice">nice to have</span>' : ''}<span class="src">${src}</span><p>${txt}</p></div></div>`;
+  }).join('');
+
+  // --- flags ---
+  const flags = [];
+  if (has(4)) { if (pr(c, 21) > .6) flags.push(['Salary at top of band', 'warn']); if (pr(c, 22) > .7) flags.push(['Notice period 3 months', 'warn']); if (pr(c, 23) > .5) flags.push(['In another final round', 'warn']); }
+  if (has(2) && pr(c, 24) > .7) flags.push(['Gap in 2023, unexplained', '']);
+  if (c.source === 'Referral') flags.push(['Referred by Anna R.', '']);
+
+  // --- logistics ---
+  const lg = ex.logistics;
+  const kv = (k, v, warn) => `<div><small>${k}</small><span class="${warn?'warn':''}">${v}</span></div>`;
+  const logistics = has(4) ? `<div class="kv">
+      ${kv('Salary expectation', lg.salary, pr(c,21) > .6)}${kv('Earliest start', lg.start)}
+      ${kv('Notice period', lg.notice, pr(c,22) > .7)}${kv('Work authorization', lg.auth)}
+      ${kv('Location', fill(lg.remote, c))}${kv('Other processes', lg.other, pr(c,23) > .5)}
+    </div>` : `<p style="color:var(--ink-2);margin:0">${r.agent} asks about salary, start date, notice period, and authorization at the end of the call.</p>`;
+
+  // --- call ---
+  const bars = Array.from({length: 64}, (_, k) => `<i style="height:${4 + Math.round(Math.abs(Math.sin(k*1.7 + c.ago))*16)}px" class="${k < 40 ? 'on' : ''}"></i>`).join('');
+  const stamps = ['0:12','1:48','3:41','5:10'];
+  const call = (has(4) || c.live) ? `
+      <div class="callbar"><button class="play" aria-label="Play recording"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5v9l8-4.5z"/></svg></button><div class="bars">${bars}</div><span class="dur">${c.live ? fmtDur(c.callDur) : '4:12 / ' + fmtDur(c.callDur)}</span></div>
+      <div class="attempts"><span>1st attempt: no answer, voicemail left</span><span>2nd attempt: connected</span><span>Recording consent: yes</span></div>
+      ${c.live ? '' : `<div class="note" style="margin-top:14px"><b>${r.agent}'s note.</b> ${ct.note[c.noteIdx]}</div>`}
+      <h2 style="margin-top:22px">Transcript</h2>
+      ${ct.q.slice(0, c.live ? 1 : 3).map((p, k) => `<div class="tr"><span class="ts">${stamps[k]}</span><div><div class="q">${r.agent}: ${p[0]}</div><div class="a">${p[1]}</div></div></div>`).join('')}
+      ${c.live ? '' : `<div class="tr"><span class="ts">${stamps[3]}</span><div><div class="q">${r.agent}: Anything you want to ask me?</div><div class="a">See below.</div></div></div>
+      <h2>${first} asked</h2>
+      <ul class="asked">${ex.asked.map(q => `<li>${q}</li>`).join('')}</ul>`}`
+    : `<p style="color:var(--ink-2);margin:0">${i < 2 ? `${r.agent} calls once socials are checked` : `${r.agent} calls today at 14:00 ${first}'s time`}, within the call window you set. Attempts, recording, and transcript show up here.</p>`;
+
+  // --- background ---
+  const hist = ex.history.map(h => `<div class="hist"><div><b>${h[0]}</b> <span>· ${fill(h[1], c)}</span></div><div class="d">${h[2]}</div></div>`).join('');
+  const socials = ct.social.map((sc, j) => c.socialsFound[j]
+    ? `<div class="social"><span class="k">${sc[0]}</span><div><b>${sc[1]}</b> · ${has(3) ? sc[2].replace('{n}', c.repos).replace('{s}', c.stars) : 'Found, not checked yet'}</div></div>`
+    : `<div class="social none"><span class="k">${sc[0]}</span><div><b>${sc[1]}</b> · Not found</div></div>`).join('');
+
+  // --- activity ---
+  const ev = [];
+  const ago = m => `${fmtAgo(Math.max(1, m))} ago`;
+  ev.push([`Applied via ${c.source}`, ago(c.ago)]);
+  if (has(1)) ev.push([`Résumé parsed, ${ex.history.length} roles found`, ago(c.ago - 5)]);
+  if (has(2)) ev.push([`Application scored <b>${c.app}</b>`, ago(c.ago - 12)]);
+  if (has(3)) ev.push([`Socials checked, ${c.socialsFound.filter(Boolean).length} of 3 found`, ago(c.ago - 25)]);
+  if (has(3)) ev.push([`Text sent: "${r.agent} from Callscreen will call tomorrow at 14:00"`, ago(c.ago - 30)]);
+  if (has(4) || c.live) ev.push([`Call attempt 1, no answer, voicemail left`, ago(c.ago - 48)]);
+  if (has(4) || c.live) ev.push([c.live ? `Call connected, in progress` : `Call connected, ${fmtDur(c.callDur)}`, ago(c.ago - 50)]);
+  if (has(4)) ev.push([`Scored <b>${c.final}</b>${low ? ', below the bar' : ', above the bar'}`, ago(c.ago - 56)]);
+  if (has(4) && !low) ev.push([`Summary sent to #hiring-${r.id === 'be' ? 'backend' : r.id === 'pd' ? 'design' : 'sales'}`, ago(c.ago - 56)]);
+  if (c.taken) ev.push([`<b>You</b> took over`, 'just now', 'you']);
+  const activity = ev.reverse().map(e => `<div class="act${e[2] === 'you' ? ' you' : ''}"><i></i><span>${e[0]}</span><span class="when">${e[1]}</span></div>`).join('');
+
+  const ico = d => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">${d}</svg>`;
+  const iLink = ico('<path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 013.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 014.5 9l1-1"/>');
+  const iMail = ico('<rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 5l6 4 6-4"/>');
+  const iPhone = ico('<path d="M4 2.5h2.5l1 3-1.5 1a7 7 0 003.5 3.5l1-1.5 3 1V12a1.5 1.5 0 01-1.5 1.5A10 10 0 012.5 4 1.5 1.5 0 014 2.5z"/>');
+
+  $('#dBody').innerHTML = `
+    <div class="d-head">
+      <span class="av big s${i}">${initials(c.name)}</span>
+      <div><h2>${esc(c.name)}</h2><p>${title} at ${c.company} · ${c.loc}, ${tz} · applied ${fmtAgo(c.ago)} ago via ${c.source}</p></div>
+    </div>
+    <div class="links">
+      <a href="#">${iLink}Résumé</a><a href="#">${iLink}LinkedIn</a>${c.socialsFound[0] ? `<a href="#">${iLink}${ct.social[0][1]}</a>` : ''}<a href="#">${iMail}${email}</a><a href="#">${iPhone}+351 91 ${200 + hash(c.id) % 700} ${100 + hash(c.id) % 900}</a>
+    </div>
+    <div class="next ${nextClass}"><span class="dot"></span><span class="t">${next}</span><span class="btns">${nextBtns}</span></div>
+
+    <nav class="d-tabs"><a href="#p-overview" class="on">Overview</a><a href="#p-call">Call</a><a href="#p-background">Background</a><a href="#p-activity">Activity</a></nav>
+
+    <section class="d-part" id="p-overview">
+      <div class="verdict">
+        <div class="big${!has(4) ? ' none' : low ? ' low' : ''}">${has(4) ? c.final : '–'}<small>${label}</small></div>
+        <div class="why"><b>${has(4) ? (low ? 'Probably not this one.' : c.final >= 85 ? 'Book the interview.' : 'Worth fifteen minutes of your time.') : 'Still in progress.'}</b><p>${why}</p>
+          <div class="breakdown">${brow('Application', c.app, has(2), 1)}${brow('Socials', c.soc, has(3), 2)}${brow('Phone call', c.call, has(4), 3)}</div>
+        </div>
+      </div>
+      ${has(4) ? `<div class="pm">
+        <div><h4><i style="background:var(--sage)"></i>Strengths</h4><ul>${ex.strengths.map(x => `<li>${x}</li>`).join('')}</ul></div>
+        <div><h4><i style="background:var(--below)"></i>Concerns</h4><ul>${ex.concerns.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      </div>` : ''}
+      ${flags.length ? `<div class="flags">${flags.map(f => `<span class="flag ${f[1]}">${f[0]}</span>`).join('')}</div>` : ''}
+      <h2>Must-haves</h2>
+      ${rubric}
+      <h2>Logistics</h2>
+      ${logistics}
+    </section>
+
+    <section class="d-part" id="p-call">
+      <h2>Phone call ${has(4) ? `<span style="float:right">${c.call} of 100 · ${fmtDur(c.callDur)}</span>` : c.live ? '<span style="float:right">Live</span>' : ''}</h2>
+      ${call}
+    </section>
+
+    <section class="d-part" id="p-background">
+      <h2>Work history</h2>
+      ${hist}
+      <h2>Education</h2>
+      <p style="margin:0;color:var(--ink-2)">${ex.edu}</p>
+      <h2>Skills</h2>
+      <div class="skills">${ex.skills.map(k => `<span class="tag" style="font-size:12px;padding:3px 8px">${k}</span>`).join('')}</div>
+      <h2>Online</h2>
+      ${socials}
+    </section>
+
+    <section class="d-part" id="p-activity">
+      <h2>Activity</h2>
+      ${activity}
+      <h2>Notes</h2>
+      <textarea class="notes" placeholder="Anything the team should know"></textarea>
+      <div class="share"><span>Shared with Mark (hiring manager)</span><button class="btn" style="height:26px">Share</button></div>
+    </section>
+  `;
+  $('#takeBtn').textContent = c.taken ? 'Give back to ' + r.agent : 'Take over';
+  $('#advanceBtn').textContent = has(4) ? (low ? 'Advance anyway' : 'Book interview') : 'Advance';
+  $('#drawer').classList.add('open'); $('#scrim').classList.add('open');
+  const body = $('#dBody'); body.scrollTop = 0;
+  body.onscroll = () => {
+    const parts = [...body.querySelectorAll('.d-part')];
+    const top = body.scrollTop + 60;
+    let cur = parts[0];
+    for (const p of parts) if (p.offsetTop <= top) cur = p;
+    body.querySelectorAll('.d-tabs a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur.id));
+  };
+}
+function closeDrawer(){ state.open = null; $('#drawer').classList.remove('open'); $('#scrim').classList.remove('open'); }
+
+// ---------- Simulation ----------
+function newApplicant(){
+  if (state.paused) return;
+  const list = cands(); const r = role(); const ct = CONTENT[r.id];
+  const used = new Set(list.map(c => c.name));
+  const name = NAMES.find(n => !used.has(n)); if (!name) return;
+  const rnd = Math.random;
+  const c = { id: r.id + '-' + Date.now(), name, loc: LOCS[Math.floor(rnd()*LOCS.length)], source: SOURCES[Math.floor(rnd()*SOURCES.length)], ago: 0, stage: 'applied',
+    app: 55 + Math.floor(rnd()*42), soc: 40 + Math.floor(rnd()*55), call: 45 + Math.floor(rnd()*53), live: false, callDur: 150 + Math.floor(rnd()*300),
+    yrs: 3 + Math.floor(rnd()*9), company: ct.companies[Math.floor(rnd()*ct.companies.length)], area: ct.areas[0], stack: ct.stacks[0], repos: 12, stars: 40,
+    socialsFound: [rnd() > .1, rnd() > .25, rnd() > .55], noteIdx: 0, taken: false };
+  c.final = Math.round(c.app*.3 + c.soc*.2 + c.call*.5);
+  list.push(c); state.entered.add(c.id); renderAll();
+}
+function advanceOne(){
+  if (state.paused) return;
+  const list = cands();
+  const pool = list.filter(c => c.stage !== 'scored' && !c.taken && !(c.stage === 'call' && !c.live && Math.random() < .6));
+  if (!pool.length) return;
+  const c = pool[Math.floor(Math.random()*pool.length)];
+  const i = STAGES.indexOf(c.stage);
+  if (c.stage === 'socials') { c.live = Math.random() < .5; }
+  if (c.stage === 'call') { c.live = false; }
+  c.stage = STAGES[i+1];
+  state.entered.add(c.id); renderAll();
+  if (state.open === c.id) openDrawer(c.id);
+}
+setInterval(() => { cands().forEach(c => { c.ago += 1; if (c.stage==='call' && c.live) c.callDur += 1; }); document.querySelectorAll('.dur[data-id]').forEach(el => { const c = cands().find(x => x.id === el.dataset.id); if (c) el.textContent = fmtDur(c.callDur); }); }, 1000);
+setInterval(advanceOne, 4200);
+setInterval(newApplicant, 7600);
+
+// ---------- Events ----------
+document.addEventListener('click', e => {
+  const roleBtn = e.target.closest('[data-role]');
+  if (roleBtn) { state.roleId = roleBtn.dataset.role; showView('pipeline'); renderAll(); return; }
+  const cardBtn = e.target.closest('.card');
+  if (cardBtn) { openDrawer(cardBtn.dataset.id); return; }
+  const sw = e.target.closest('.switch');
+  if (sw) { sw.classList.toggle('on'); sw.setAttribute('aria-pressed', sw.classList.contains('on')); return; }
+  const voice = e.target.closest('.voice');
+  if (voice) { document.querySelectorAll('.voice').forEach(v => v.classList.remove('sel')); voice.classList.add('sel'); return; }
+  const chipX = e.target.closest('.chip button, .qitem > button');
+  if (chipX) { chipX.closest('.chip, .qitem').remove(); return; }
+});
+$('#newRole').addEventListener('click', () => { document.querySelectorAll('.role').forEach(b => b.classList.remove('active')); showView('create'); });
+$('#cancelCreate').addEventListener('click', () => { showView('pipeline'); renderRoles(); });
+$('#saveRole').addEventListener('click', () => {
+  const name = $('#fTitle').value || 'New role';
+  const id = 'r' + Date.now();
+  ROLES.push({ id, name, team: 'Design', opened: 'just now', threshold: 70, agent: 'June' });
+  CONTENT[id] = CONTENT.pd;
+  state.data[id] = [];
+  state.roleId = id; showView('pipeline'); renderAll();
+});
+$('#closeDrawer').addEventListener('click', closeDrawer);
+$('#dBody').addEventListener('click', e => { const a = e.target.closest('.d-tabs a'); if (!a) return; e.preventDefault(); const t = $(a.getAttribute('href')); $('#dBody').scrollTo({ top: t.offsetTop - 40, behavior: 'smooth' }); });
+$('#advanceBtn').addEventListener('click', () => { const c = cands().find(x => x.id === state.open); if (!c) return; const i = STAGES.indexOf(c.stage); if (i < 4) { c.stage = STAGES[i+1]; c.live = false; state.entered.add(c.id); renderAll(); openDrawer(c.id); } });
+$('#rejectBtn').addEventListener('click', () => { const c = cands().find(x => x.id === state.open); if (!c) return; const list = cands(); list.splice(list.indexOf(c), 1); closeDrawer(); renderAll(); });
+$('#scrim').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+$('#takeBtn').addEventListener('click', () => { const c = cands().find(x => x.id === state.open); if (!c) return; c.taken = !c.taken; if (c.taken) c.live = false; openDrawer(c.id); renderAll(); });
+$('#pauseBtn').addEventListener('click', e => { state.paused = !state.paused; e.target.textContent = state.paused ? 'Resume agent' : 'Pause agent'; renderTop(); });
+$('#q').addEventListener('input', renderBoard);
+$('#fOpener').addEventListener('input', e => { $('#pvOpener').textContent = e.target.value; });
+$('#fAgent').addEventListener('input', e => { $('#pvAgent').textContent = e.target.value || 'June'; });
+$('#suggest').addEventListener('click', e => { ['Ran own research','Ships weekly'].forEach(t => { const sp = document.createElement('span'); sp.className = 'chip enter'; sp.innerHTML = t + ' <button aria-label="Remove">×</button>'; $('#addMust').before(sp); }); e.target.textContent = 'Added 2 from the description'; });
+$('#addMust').addEventListener('click', e => { const s = document.createElement('span'); s.className = 'chip'; s.innerHTML = 'Worked in a regulated industry <button aria-label="Remove">×</button>'; e.target.before(s); });
+document.querySelectorAll('.chip.add:not(#addMust)').forEach(b => b.addEventListener('click', () => {}));
+
+function showView(v){ document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === v)); }
+
+renderAll();
+const params = new URLSearchParams(location.search);
+if (params.get('view') === 'create') $('#newRole').click();
+if (params.get('open')) { const c = cands().find(x => x.stage === params.get('open')); if (c) openDrawer(c.id); }
+</script>
+</body>
+</html>
