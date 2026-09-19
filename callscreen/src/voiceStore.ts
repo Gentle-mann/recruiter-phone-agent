@@ -2,8 +2,26 @@ import { useSyncExternalStore } from "react";
 import type { VoiceState } from "./voice";
 
 type Entry = VoiceState & { candidateId: string; startedAt: number };
-let current: Entry | null = null;
+const KEY = "callscreen.voice";
 const listeners = new Set<() => void>();
+
+function restore(): Entry | null {
+  try {
+    const raw = sessionStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) as Entry : null;
+  } catch {
+    return null;
+  }
+}
+
+let current: Entry | null = restore();
+
+function emit() {
+  if (current) {
+    try { sessionStorage.setItem(KEY, JSON.stringify(current)); } catch { /* ignore quota */ }
+  }
+  listeners.forEach((l) => l());
+}
 
 export function setVoice(candidateId: string, state: VoiceState) {
   const prev = current?.candidateId === candidateId ? current : null;
@@ -17,7 +35,7 @@ export function setVoice(candidateId: string, state: VoiceState) {
       state.durationSeconds ??
       (state.ended ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : prev?.durationSeconds),
   };
-  listeners.forEach((l) => l());
+  emit();
 }
 
 export function voiceSeconds(state: VoiceState | null, now: number) {
@@ -43,3 +61,4 @@ export function useVoice(candidateId: string | null): VoiceState | null {
     () => (current && candidateId && current.candidateId === candidateId ? current : null),
   );
 }
+

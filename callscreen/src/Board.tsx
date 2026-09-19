@@ -7,6 +7,7 @@ import { ApplyLink } from "./ApplyLink";
 import { ModeSwitch } from "./ModeSwitch";
 import { useVoice, callSeconds } from "./voiceStore";
 import { useScreen } from "./screenStore";
+import { settleLiveCall } from "./settleLiveCall";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -77,6 +78,18 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
     const calling = c.live || (stage === "call" && !!voice && !voice.ended);
     const seconds = callSeconds(c, now, voice);
     const first = c.name.split(" ")[0];
+    const settled = useRef(false);
+    useEffect(() => {
+      if (stage !== "call" || !voice?.ended || settled.current) return;
+      settled.current = true;
+      void settleLiveCall(
+        c._id,
+        voice,
+        voice.durationSeconds || 0,
+        (id) => data.advance(id),
+        data.completeScreen,
+      );
+    }, [c._id, stage, voice, data]);
     return (
       <button className={"card" + (entered.has(c._id) ? " enter" : "")} onClick={() => onOpen(c._id)}>
         <span className={`av s${bi}`}>{initials(c.name)}</span>

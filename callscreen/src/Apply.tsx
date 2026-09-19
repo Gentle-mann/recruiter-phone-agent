@@ -58,6 +58,7 @@ function ApplyForm({ slug }: { slug?: string }) {
   const [file, setFile] = useState<File | null>(() => samplePdf(PREFILL.name));
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [err, setErr] = useState("");
+  const [similar, setSimilar] = useState(true);
   const prefill = () => {
     const s = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
     setF(s); setFile(samplePdf(s.name)); setErr("");
@@ -112,7 +113,7 @@ function ApplyForm({ slug }: { slug?: string }) {
       {role && state === "done" && (
         <>
           <h1>Thanks, {f.name.trim().split(" ")[0]}.</h1>
-          <p className="apply-lead">{role.agent}, our screening agent, reads every application within the hour. Keep the recruiter board open on <strong>Live</strong> — the card should already be moving through screening.</p>
+          <p className="apply-lead">{role.agent}, our screening agent, reads every application within the hour. Keep the recruiter board open on <strong>Live</strong> — the card should already be moving through screening.{similar ? " We’ll also put you forward for similar open roles." : ""}</p>
           <p className="apply-muted">Sent to the {role.team} team. You can leave this tab open.</p>
         </>
       )}
@@ -146,6 +147,19 @@ function ApplyForm({ slug }: { slug?: string }) {
               <div className="field"><label>Earliest start date</label><input type="text" value={f.startDate} onChange={set("startDate")} placeholder="e.g. 1 November, or 2 months notice" required /></div>
             </div>
             <div className="field"><label>Anything you want us to know</label><textarea rows={3} value={f.note} onChange={set("note")} placeholder="Optional" /></div>
+            <button
+              type="button"
+              className={"apply-optin" + (similar ? " on" : "")}
+              role="switch"
+              aria-checked={similar}
+              onClick={() => setSimilar((v) => !v)}
+            >
+              <span className={"apply-switch" + (similar ? " on" : "")} aria-hidden="true"><i /></span>
+              <span className="apply-optin-copy">
+                <b>Also automatically apply to other similar jobs?</b>
+                <span>We’ll send this application to other open roles that look like a match.</span>
+              </span>
+            </button>
             {err && <p className="apply-err">{err}</p>}
             <div className="apply-foot">
               <button className="btn primary" type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Send application"}</button>

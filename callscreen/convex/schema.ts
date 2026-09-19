@@ -53,6 +53,12 @@ export default defineSchema({
     authorized: v.optional(v.boolean()),
     startDate: v.optional(v.string()),
     note: v.optional(v.string()),
+    callTurns: v.optional(v.array(v.object({
+      id: v.string(),
+      label: v.string(),
+      prompt: v.string(),
+      answer: v.optional(v.string()),
+    }))),
   })
     .index("by_role", ["roleId"])
     .index("by_role_stage", ["roleId", "stage"]),

@@ -2,11 +2,12 @@ import { callFinished, fetchVoiceState, placeVoiceCall, type VoiceState } from "
 import { setVoice } from "./voiceStore";
 import { APPLICATION_STEPS, SOCIAL_STEPS, clearScreen, setScreen } from "./screenStore";
 import { WALK_STORAGE, type Walkthrough } from "./walkChannel";
+import { settleLiveCall } from "./settleLiveCall";
 
 const started = new Set<string>();
 const LOCK = "callscreen.screening";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const STEP_MS = 3200;
+const STEP_MS = 900;
 
 function claim(id: string) {
   if (started.has(id)) return false;
@@ -42,6 +43,7 @@ async function playSteps(
 export async function runLiveScreening(
   msg: Walkthrough,
   screen: (id: string) => Promise<void>,
+  complete?: (id: string, result: { turns: VoiceState["turns"]; callDur: number }) => Promise<void>,
 ) {
   if (!claim(msg.candidateId)) return;
   localStorage.removeItem(WALK_STORAGE);
@@ -64,8 +66,8 @@ export async function runLiveScreening(
     const poll = window.setInterval(async () => {
       const next = await fetchVoiceState();
       if (!next) return;
-      latest = next;
-      setVoice(msg.candidateId, { ...next, startedAt });
+      if (next.turns.length || !latest.turns.length) latest = next;
+      setVoice(msg.candidateId, { ...next, startedAt, turns: next.turns.length ? next.turns : latest.turns });
       if (stillRinging(next)) sawLive = true;
       if (callFinished(next) || (sawLive && next.status === "idle" && next.step === "idle")) {
         clearInterval(poll);
@@ -82,5 +84,5 @@ export async function runLiveScreening(
     ended: true,
     status: latest.status === "idle" ? "completed" : latest.status,
   });
-  await screen(msg.candidateId);
+  await settleLiveCall(msg.candidateId, latest, durationSeconds, screen, complete);
 }

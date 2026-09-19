@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { makeCandidate, NAMES, rng, STAGES, type Stage } from "../../convex/content";
-import type { Candidate, CandidateFull, DataApi, Event, NewRole, Note, Role } from "../types";
+import { summarizeScreen } from "../../convex/screenSummary";
+import type { Candidate, CandidateFull, DataApi, Event, NewRole, Note, Role, ScreenTurns } from "../types";
 
 /**
  * Demo mode: an in-memory copy of the product with a simulation that adds
@@ -138,6 +139,33 @@ class DemoStore {
     this.notes.push({ _id: this.id("n"), candidateId: id, text: text.trim(), at: Date.now() });
     this.emit();
   }
+  completeScreen(id: string, result: ScreenTurns) {
+    const c = this.cands.find((x) => x._id === id); if (!c) return;
+    const summary = summarizeScreen({
+      turns: result.turns,
+      authorized: c.authorized,
+      startDate: c.startDate,
+      note: c.note,
+      loc: c.loc,
+      linkedin: c.linkedin,
+      website: c.website,
+      yrs: c.yrs,
+      company: c.company,
+      area: c.area,
+      stack: c.stack,
+      repos: c.repos,
+    });
+    c.app = summary.scores.app;
+    c.soc = summary.scores.soc;
+    c.call = summary.scores.call;
+    c.final = summary.scores.final;
+    c.callDur = result.callDur;
+    c.live = false;
+    c.stage = "scored";
+    c.callTurns = result.turns;
+    this.event(id, `Scored <b>${c.final}</b>${c.final < 70 ? ", below the bar" : ", above the bar"} from the call`);
+    this.emit();
+  }
   createRole(r: NewRole) {
     const _id = this.id("r");
     this.roles.push({ _id, slug: slugify(r.name), name: r.name, team: r.team, openedAt: Date.now(), threshold: r.threshold, agent: r.agent, contentKey: r.contentKey });
@@ -158,6 +186,7 @@ export function useDemoData(): DataApi {
     advance: async (id) => store.advance(id),
     reject: async (id) => store.reject(id),
     addNote: async (id, text) => store.addNote(id, text),
+    completeScreen: async (id, result) => store.completeScreen(id, result),
     createRole: async (r) => store.createRole(r),
   }), []);
 }

@@ -9,6 +9,7 @@ export function useConvexData(): DataApi {
   const advance = useMutation(api.candidates.advance);
   const reject = useMutation(api.candidates.reject);
   const addNote = useMutation(api.candidates.addNote);
+  const completeScreen = useMutation(api.candidates.completeScreen);
   const create = useMutation(api.roles.create);
 
   return useMemo<DataApi>(() => ({
@@ -19,6 +20,11 @@ export function useConvexData(): DataApi {
     advance: (id) => advance({ id: id as Id<"candidates"> }).then(() => {}),
     reject: (id) => reject({ id: id as Id<"candidates"> }).then(() => {}),
     addNote: (id, text) => addNote({ id: id as Id<"candidates">, text }).then(() => {}),
+    completeScreen: (id, result) => completeScreen({
+      id: id as Id<"candidates">,
+      callDur: result.callDur,
+      turns: result.turns.map((t) => ({ id: t.id, label: t.label, prompt: t.prompt, answer: t.answer || undefined })),
+    }).then(() => {}),
     createRole: async (r) => create(r),
-  }), [advance, reject, addNote, create]);
+  }), [advance, reject, addNote, completeScreen, create]);
 }

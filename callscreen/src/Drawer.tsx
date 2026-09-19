@@ -3,8 +3,11 @@ import { useData } from "./data";
 import { MailIcon, PhoneIcon, ResumeIcon, SocialIcon, LinkedInIcon } from "./icons";
 import type { Role } from "./types";
 import { CONTENT, BOARD_STAGES, STAGES, TZ, fill, fmtAgo, fmtDur, hash, initials, pr, boardStage } from "./content";
-import { useVoice, callSeconds } from "./voiceStore";
+import { summarizeScreen } from "../convex/screenSummary";
+import { fetchVoiceState } from "./voice";
+import { useVoice, callSeconds, setVoice } from "./voiceStore";
 import { useScreen } from "./screenStore";
+import { settleLiveCall } from "./settleLiveCall";
 import { useNow } from "./useNow";
 
 const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" dangerouslySetInnerHTML={{ __html: d }} />;
@@ -25,6 +28,26 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   const [note, setNote] = useState("");
 
   useEffect(() => { if (id && body.current) { body.current.scrollTop = 0; setTab("p-overview"); setNote(""); } }, [id]);
+  useEffect(() => {
+    if (!id || !c || voice?.turns?.length || c.callTurns?.length) return;
+    let cancelled = false;
+    void fetchVoiceState().then((state) => {
+      if (cancelled || !state?.turns?.length) return;
+      if (state.candidateName && state.candidateName !== c.name) return;
+      setVoice(id, { ...state, ended: true, status: state.status === "idle" ? "completed" : state.status });
+    });
+    return () => { cancelled = true; };
+  }, [id, c, voice]);
+  useEffect(() => {
+    if (!id || !c || c.stage !== "call" || !voice?.ended) return;
+    void settleLiveCall(
+      id,
+      voice,
+      voice.durationSeconds || 0,
+      (cid) => data.advance(cid),
+      data.completeScreen,
+    );
+  }, [id, c, voice, data]);
 
   const open = !!id;
   if (!c || !role) {
@@ -40,7 +63,6 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   const i = STAGES.indexOf(c.stage);
   const bi = BOARD_STAGES.indexOf(boardStage(c.stage));
   const has = (k: number) => i >= k;
-  const low = c.final < role.threshold;
   const first = c.name.split(" ")[0];
   const title = ct.titles[hash(c._id) % ct.titles.length];
   const email = c.email ?? c.name.toLowerCase().replace(/[^a-z ]/g, "").replace(" ", ".") + "@gmail.com";
@@ -49,6 +71,23 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   const tz = TZ[c.loc] ?? "GMT";
   const agoMs = now - c.appliedAt;
   const P = (k: number) => pr(c._id, k);
+  const turns = (voice?.turns?.length ? voice.turns : c.callTurns) ?? [];
+  const summary = turns.length ? summarizeScreen({
+    turns,
+    authorized: c.authorized,
+    startDate: c.startDate,
+    note: c.note,
+    loc: c.loc,
+    linkedin: c.linkedin,
+    website: c.website,
+    yrs: c.yrs,
+    company: c.company,
+    area: c.area,
+    stack: c.stack,
+    repos: c.repos,
+  }) : null;
+  const scores = summary && (c.final === 0 || fromForm) ? summary.scores : { app: c.app, soc: c.soc, call: c.call, final: c.final };
+  const low = scores.final < role.threshold;
 
   // ---- next step ----
   let next: React.ReactNode, nextBtns: React.ReactNode = null, nextClass = `s${i}`;
@@ -56,7 +95,7 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   else if (screen?.stage === "socials") next = <><b>{screen.current}.</b> Checking LinkedIn and Instagram against the résumé.</>;
   else if (i === 0 || i === 1) next = i === 0
     ? <><b>{role.agent} is reading the application.</b> Checking match with the job description.</>
-    : <><b>Next: socials check.</b> Application scored {c.app}, above the bar.</>;
+    : <><b>Next: socials check.</b> Application scored {scores.app}, above the bar.</>;
   else if (i === 2) { next = <><b>Next: {role.agent} calls today at 14:00 {first}'s time.</b> A summary lands here within minutes of the call.</>; nextBtns = <button className="btn">Reschedule</button>; }
   else if (i === 3 && calling) {
     next = voice?.error
@@ -70,26 +109,36 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   else { next = <><b>Decline email goes out in 18 hours</b> unless you override.</>; nextBtns = <button className="btn">Keep in process</button>; }
 
   // ---- verdict ----
-  const label = !has(4) ? (calling ? "On the call now" : "Not scored yet") : low ? "Below the bar" : c.final >= 85 ? "Strong match" : "Worth a look";
-  const headline = has(4) ? (low ? "Probably not this one." : c.final >= 85 ? "Book the interview." : "Worth fifteen minutes of your time.") : "Still in progress.";
-  const why = !has(4) ? `${role.agent} writes a summary here after the call.` : low ? `${ct.concerns[0]} ${ct.strengths[1]}` : `${ct.strengths[0]} ${ct.concerns[P(9) > .5 ? 0 : 1]}`;
+  const label = !has(4) ? (calling ? "On the call now" : "Not scored yet") : low ? "Below the bar" : scores.final >= 85 ? "Strong match" : "Worth a look";
+  const headline = has(4) ? (low ? "Probably not this one." : scores.final >= 85 ? "Book the interview." : "Worth fifteen minutes of your time.") : "Still in progress.";
+  const why = !has(4) ? `${role.agent} writes a summary here after the call.` : summary ? summary.why : low ? `${ct.concerns[0]} ${ct.strengths[1]}` : `${ct.strengths[0]} ${ct.concerns[P(9) > .5 ? 0 : 1]}`;
   const Brow = ({ l, v, ok, k }: { l: string; v: number; ok: boolean; k: number }) => (
     <div className={`brow k${k}` + (ok ? "" : " pending")}><span>{l}</span><span className="track"><span className="fill" style={{ width: `${ok ? v : 0}%` }} /></span><b>{ok ? v : "–"}</b></div>
   );
 
   // ---- rubric ----
   const verdictFor = (k: number) => { const x = P(k) * 0.6 + (c.final - 55) / 60; return x > .55 ? "met" : x > .3 ? "partial" : "no"; };
-  const rubric = ct.rubric.map(([name, kind, src, texts], k) => {
+  const hashedRubric = ct.rubric.map(([name, kind, src, texts], k) => {
     const pending = !has(1) || (src.startsWith("call") && !has(4)) || (src === "GitHub" && !has(3)) || (src === "portfolio" && !has(3));
     if (pending) return <div key={k} className="rub"><span className="v unclear">Not yet</span><div><b>{name}</b>{kind === "nice" && <span className="nice">nice to have</span>}<p>Checked at the {src.startsWith("call") ? "call" : src} stage.</p></div></div>;
     const v = verdictFor(k);
     return <div key={k} className="rub"><span className={`v ${v}`}>{v === "met" ? "Met" : v === "partial" ? "Partial" : "Not met"}</span><div><b>{name}</b>{kind === "nice" && <span className="nice">nice to have</span>}<span className="src">{src}</span><p>{fill(texts[v === "met" ? 0 : v === "partial" ? 1 : 2], c)}</p></div></div>;
   });
+  const rubric = summary && has(4)
+    ? summary.rubric.map((row) => (
+      <div key={row.name} className="rub">
+        <span className={`v ${row.verdict}`}>{row.verdict === "met" ? "Met" : row.verdict === "partial" ? "Partial" : "Not met"}</span>
+        <div><b>{row.name}</b>{row.kind === "nice" && <span className="nice">nice to have</span>}<span className="src">{row.src}</span><p>{row.detail}</p></div>
+      </div>
+    ))
+    : hashedRubric;
 
   // ---- flags ----
-  const flags: [string, string][] = [];
-  if (has(4)) { if (P(21) > .6) flags.push(["Salary at top of band", "warn"]); if (P(22) > .7) flags.push(["Notice period 3 months", "warn"]); if (P(23) > .5) flags.push(["In another final round", "warn"]); }
-  if (has(2) && P(24) > .7) flags.push(["Gap in 2023, unexplained", ""]);
+  const flags: [string, string][] = summary && has(4) ? [...summary.flags] : [];
+  if (!summary) {
+    if (has(4)) { if (P(21) > .6) flags.push(["Salary at top of band", "warn"]); if (P(22) > .7) flags.push(["Notice period 3 months", "warn"]); if (P(23) > .5) flags.push(["In another final round", "warn"]); }
+    if (has(2) && P(24) > .7) flags.push(["Gap in 2023, unexplained", ""]);
+  }
   if (c.source === "Referral") flags.push(["Referred by Anna R.", ""]);
 
   // ---- logistics ----
@@ -144,15 +193,15 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
 
         <section className="d-part" id="p-overview">
           <div className="verdict">
-            <div className={"big" + (!has(4) ? " none" : low ? " low" : "")}>{has(4) ? c.final : "–"}<small>{label}</small></div>
+            <div className={"big" + (!has(4) ? " none" : low ? " low" : "")}>{has(4) ? scores.final : "–"}<small>{label}</small></div>
             <div className="why"><b>{headline}</b><p>{why}</p>
-              <div className="breakdown"><Brow l="Application" v={c.app} ok={has(2)} k={1} /><Brow l="Socials" v={c.soc} ok={has(3)} k={2} /><Brow l="Phone call" v={c.call} ok={has(4)} k={3} /></div>
+              <div className="breakdown"><Brow l="Application" v={scores.app} ok={has(2)} k={1} /><Brow l="Socials" v={scores.soc} ok={has(3)} k={2} /><Brow l="Phone call" v={scores.call} ok={has(4)} k={3} /></div>
             </div>
           </div>
           {has(4) && (
             <div className="pm">
-              <div><h4><i style={{ background: "var(--sage)" }} />Strengths</h4><ul>{ct.strengths.map((x) => <li key={x}>{x}</li>)}</ul></div>
-              <div><h4><i style={{ background: "var(--below)" }} />Concerns</h4><ul>{ct.concerns.map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><h4><i style={{ background: "var(--sage)" }} />Strengths</h4><ul>{(summary?.strengths ?? ct.strengths).map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><h4><i style={{ background: "var(--below)" }} />Concerns</h4><ul>{(summary?.concerns ?? ct.concerns).map((x) => <li key={x}>{x}</li>)}</ul></div>
             </div>
           )}
           {flags.length > 0 && <div className="flags">{flags.map((f) => <span key={f[0]} className={`flag ${f[1]}`}>{f[0]}</span>)}</div>}
@@ -169,23 +218,28 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
           <h2>Must-haves</h2>
           {rubric}
           <h2>Logistics</h2>
-          {has(4) ? (
+          {has(4) && summary ? (
+            <div className="kv">{summary.logistics.map((row) => <KV key={row.k} k={row.k} v={row.v} warn={row.warn} />)}</div>
+          ) : has(4) && !fromForm ? (
             <div className="kv">
               <KV k="Salary expectation" v={lg.salary} warn={P(21) > .6} /><KV k="Earliest start" v={lg.start} />
               <KV k="Notice period" v={lg.notice} warn={P(22) > .7} /><KV k="Work authorization" v={lg.auth} />
               <KV k="Location" v={fill(lg.remote, c)} /><KV k="Other processes" v={lg.other} warn={P(23) > .5} />
             </div>
-          ) : <p style={{ color: "var(--ink-2)", margin: 0 }}>{role.agent} asks about salary, start date, notice period, and authorization at the end of the call.</p>}
+          ) : has(4) ? (
+            <p style={{ color: "var(--ink-2)", margin: 0 }}>Logistics from this screen are in the application section above.</p>
+          ) : <p style={{ color: "var(--ink-2)", margin: 0 }}>{role.agent} asks about full-time eligibility, US work authorization, and a system from the résumé.</p>}
         </section>
 
         <section className="d-part" id="p-call">
-          <h2>Phone call {has(4) ? <span style={{ float: "right" }}>{c.call} of 100 · {fmtDur(seconds)}</span> : calling ? <span style={{ float: "right" }}>{voice?.status || "Live"}</span> : null}</h2>
-          {voice ? (
+          <h2>Phone call {has(4) ? <span style={{ float: "right" }}>{scores.call} of 100 · {fmtDur(seconds)}</span> : calling ? <span style={{ float: "right" }}>{voice?.status || "Live"}</span> : null}</h2>
+          {turns.length || calling ? (
             <>
               <div className="callbar"><button className="play" aria-label="Live call"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5v9l8-4.5z" /></svg></button><div className="bars">{bars}</div><span className="dur">{fmtDur(seconds)}</span></div>
-              {voice.error && <p className="apply-err">{voice.error}</p>}
-              <h2 style={{ marginTop: 22 }}>Live transcript</h2>
-              {voice.turns && voice.turns.length > 0 ? voice.turns.map((turn, k) => (
+              {voice?.error && <p className="apply-err">{voice.error}</p>}
+              {summary && has(4) && <div className="note" style={{ marginTop: 14 }}><b>{role.agent}'s note.</b> {summary.note}</div>}
+              <h2 style={{ marginTop: 22 }}>{voice && !voice.ended ? "Live transcript" : "Transcript"}</h2>
+              {turns.map((turn, k) => (
                 <div key={turn.id + k} className="tr">
                   <span className="ts">{turn.label}</span>
                   <div>
@@ -193,8 +247,8 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
                     <div className="a">{turn.answer || (calling ? "Listening…" : "No reply captured.")}</div>
                   </div>
                 </div>
-              )) : null}
-              {calling && voice.ask && !voice.turns.some((t) => t.id === voice.ask!.id && t.answer) && (
+              ))}
+              {calling && voice?.ask && !turns.some((t) => t.id === voice.ask!.id && t.answer) && (
                 <div className="tr">
                   <span className="ts">{voice.ask.label}</span>
                   <div>
@@ -203,8 +257,8 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
                   </div>
                 </div>
               )}
-              {(!voice.turns || voice.turns.length === 0) && !(calling && voice.ask) && (
-                <p style={{ color: "var(--ink-2)", margin: 0 }}>{voice.error ? "The board is waiting on the voice agent." : "Dialing the screening number…"}</p>
+              {turns.length === 0 && !(calling && voice?.ask) && (
+                <p style={{ color: "var(--ink-2)", margin: 0 }}>{voice?.error ? "The board is waiting on the voice agent." : "Dialing the screening number…"}</p>
               )}
             </>
           ) : has(4) || c.live ? (
@@ -233,7 +287,13 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
           <h2>Skills</h2>
           <div className="skills">{ct.skills.map((k) => <span key={k} className="tag" style={{ fontSize: 12, padding: "3px 8px" }}>{k}</span>)}</div>
           <h2>Online</h2>
-          {ct.social.map((sc, j) => c.socialsFound[j]
+          {fromForm ? (
+            <>
+              {c.website && <div className="social"><span className="k"><SocialIcon k={/github\.com/.test(c.website) ? "gh" : "web"} /></span><div><b>{/github\.com/.test(c.website) ? "GitHub" : "Website"}</b> · Linked from the application</div></div>}
+              {c.linkedin && <div className="social"><span className="k"><SocialIcon k="in" /></span><div><b>LinkedIn</b> · Linked from the application</div></div>}
+              {!c.website && !c.linkedin && <p style={{ color: "var(--ink-2)", margin: 0 }}>No profiles linked on the application.</p>}
+            </>
+          ) : ct.social.map((sc, j) => c.socialsFound[j]
             ? <div key={j} className="social"><span className="k"><SocialIcon k={sc[0]} /></span><div><b>{sc[1]}</b> · {has(3) ? sc[2].replace("{n}", String(c.repos)).replace("{s}", String(c.stars)) : "Found, not checked yet"}</div></div>
             : <div key={j} className="social none"><span className="k"><SocialIcon k={sc[0]} /></span><div><b>{sc[1]}</b> · Not found</div></div>)}
         </section>

@@ -60,10 +60,19 @@ function Provider({ data, setMode }: { data: DataApi; setMode: (m: Mode) => void
 
 function LivePipeline({ onFocus }: { onFocus: (msg: Walkthrough) => void }) {
   const screen = useMutation(api.candidates.advance);
+  const completeScreen = useMutation(api.candidates.completeScreen);
   useEffect(() => {
     const run = (msg: Walkthrough) => {
       onFocus(msg);
-      void runLiveScreening(msg, (id) => screen({ id: id as Id<"candidates"> }).then(() => {}));
+      void runLiveScreening(
+        msg,
+        (id) => screen({ id: id as Id<"candidates"> }).then(() => {}),
+        (id, result) => completeScreen({
+          id: id as Id<"candidates">,
+          callDur: result.callDur,
+          turns: result.turns.map((t) => ({ id: t.id, label: t.label, prompt: t.prompt, answer: t.answer || undefined })),
+        }).then(() => {}),
+      );
     };
     const pending = consumeWalkthrough();
     if (pending) run(pending);
@@ -74,7 +83,7 @@ function LivePipeline({ onFocus }: { onFocus: (msg: Walkthrough) => void }) {
       run(e.data as Walkthrough);
     };
     return () => channel.close();
-  }, [screen, onFocus]);
+  }, [screen, completeScreen, onFocus]);
   return null;
 }
 

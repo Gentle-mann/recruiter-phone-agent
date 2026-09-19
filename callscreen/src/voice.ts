@@ -26,6 +26,7 @@ export type VoiceState = {
   startedAt?: number;
   durationSeconds?: number;
   ended?: boolean;
+  candidateName?: string;
 };
 
 const STEP_COPY: Record<string, VoiceAsk> = {
@@ -99,6 +100,8 @@ function asVoiceState(data: FlaskState, fallbackStatus = "queued"): VoiceState {
     turns,
     ask: step === "closed" || step === "idle" ? undefined : askFor(data, step),
     lastAnswer: last?.answer ?? null,
+    candidateName: call?.candidate_name || data.candidate_name,
+    ended: step === "closed" || FINISHED.has(status),
   };
 }
 

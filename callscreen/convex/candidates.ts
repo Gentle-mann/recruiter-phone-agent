@@ -1,6 +1,14 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { STAGES } from "./content";
+import { summarizeScreen } from "./screenSummary";
+
+const turn = v.object({
+  id: v.string(),
+  label: v.string(),
+  prompt: v.string(),
+  answer: v.optional(v.string()),
+});
 
 export const listByRole = query({
   args: { roleId: v.id("roles") },
@@ -56,5 +64,50 @@ export const addNote = mutation({
   handler: async (ctx, { id, text }) => {
     if (!text.trim()) return;
     await ctx.db.insert("notes", { candidateId: id, text: text.trim(), at: Date.now() });
+  },
+});
+
+export const completeScreen = mutation({
+  args: {
+    id: v.id("candidates"),
+    callDur: v.number(),
+    turns: v.array(turn),
+  },
+  handler: async (ctx, { id, callDur, turns }) => {
+    const c = await ctx.db.get(id);
+    if (!c) return;
+    const summary = summarizeScreen({
+      turns,
+      authorized: c.authorized,
+      startDate: c.startDate,
+      note: c.note,
+      loc: c.loc,
+      linkedin: c.linkedin,
+      website: c.website,
+      yrs: c.yrs,
+      company: c.company,
+      area: c.area,
+      stack: c.stack,
+      repos: c.repos,
+    });
+    const { app, soc, call, final } = summary.scores;
+    await ctx.db.patch(id, {
+      app,
+      soc,
+      call,
+      final,
+      callDur,
+      live: false,
+      stage: "scored",
+      callTurns: turns.map((t) => ({ ...t, answer: t.answer || undefined })),
+    });
+    if (c.stage !== "scored" || c.final === 0) {
+      await ctx.db.insert("events", {
+        candidateId: id,
+        text: `Scored <b>${final}</b>${final < 70 ? ", below the bar" : ", above the bar"} from the call`,
+        at: Date.now(),
+        byRecruiter: false,
+      });
+    }
   },
 });
