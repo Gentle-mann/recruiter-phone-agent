@@ -1,0 +1,10 @@
+import puppeteer from "puppeteer-core";
+const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const page = await browser.newPage();
+await page.setViewport({ width: 1000, height: 200, deviceScaleFactor: 3 });
+await page.goto("http://localhost:5180", { waitUntil: "networkidle0" });
+await new Promise((r) => setTimeout(r, 1500));
+const el = await page.$(".brand");
+await el.screenshot({ path: ".context/icons-logo.png" });
+await browser.close();
+console.log("saved");

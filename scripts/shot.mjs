@@ -5,8 +5,9 @@ const browser = await puppeteer.launch({ executablePath: "/Applications/Google C
 const page = await browser.newPage();
 await page.setViewport({ width: Number(w), height: Number(h) });
 await page.goto(url, { waitUntil: "networkidle0" });
-await page.waitForSelector(".card", { timeout: 20000 });
-if (click) { await page.click(click); await new Promise((r) => setTimeout(r, 900)); }
+if (click) { await page.waitForSelector(click, { timeout: 20000 }); await page.click(click); }
+await page.waitForSelector(".card, .empty, .loading", { timeout: 20000 });
+await new Promise((r) => setTimeout(r, 900));
 await page.screenshot({ path: out });
 await browser.close();
 console.log("saved", out);

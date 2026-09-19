@@ -366,3 +366,12 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .mode button:hover { color: var(--ink); }
 .mode button.on { background: var(--ink); color: #fff; }
 .empty-main { display: flex; align-items: center; gap: 12px; padding: 18px 28px; color: var(--ink-3); }
+
+/* icons */
+.brand svg { width: 18px; height: 18px; flex: none; }
+.brand i { display: none; }
+.tags .tag { display: inline-grid; place-items: center; width: 18px; height: 16px; padding: 0; }
+.tags .tag svg { width: 10px; height: 10px; display: block; }
+.tags .tag.off svg { opacity: .55; }
+.social .k svg { width: 12px; height: 12px; display: block; }
+.links svg { width: 12px; height: 12px; }

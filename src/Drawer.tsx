@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useData } from "./data";
+import { MailIcon, PhoneIcon, ResumeIcon, SocialIcon, LinkedInIcon } from "./icons";
 import type { Role } from "./types";
 import { CONTENT, STAGES, TZ, fill, fmtAgo, fmtDur, hash, initials, pr } from "./content";
 import { Wave, liveDur } from "./Board";
 import { useNow } from "./useNow";
 
 const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" dangerouslySetInnerHTML={{ __html: d }} />;
-const I_LINK = '<path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 013.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 014.5 9l1-1"/>';
-const I_MAIL = '<rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 5l6 4 6-4"/>';
-const I_PHONE = '<path d="M4 2.5h2.5l1 3-1.5 1a7 7 0 003.5 3.5l1-1.5 3 1V12a1.5 1.5 0 01-1.5 1.5A10 10 0 012.5 4 1.5 1.5 0 014 2.5z"/>';
 
 export function Drawer({ id, role, onClose }: { id: string | null; role: Role | null; onClose: () => void }) {
   const { data } = useData();
@@ -116,9 +114,9 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
           <div><h2>{c.name}</h2><p>{title} at {c.company} · {c.loc}, {tz} · applied {fmtAgo(agoMs)} ago via {c.source}</p></div>
         </div>
         <div className="links">
-          <a href="#"><Ico d={I_LINK} />Résumé</a><a href="#"><Ico d={I_LINK} />LinkedIn</a>
-          {c.socialsFound[0] && <a href="#"><Ico d={I_LINK} />{ct.social[0][1]}</a>}
-          <a href="#"><Ico d={I_MAIL} />{email}</a><a href="#"><Ico d={I_PHONE} />+351 91 {200 + hash(c._id) % 700} {100 + hash(c._id) % 900}</a>
+          <a href="#"><ResumeIcon />Résumé</a><a href="#"><LinkedInIcon />LinkedIn</a>
+          {c.socialsFound[0] && ct.social[0][0] !== "in" && <a href="#"><SocialIcon k={ct.social[0][0]} />{ct.social[0][1]}</a>}
+          <a href="#"><MailIcon />{email}</a><a href="#"><PhoneIcon />+351 91 {200 + hash(c._id) % 700} {100 + hash(c._id) % 900}</a>
         </div>
         <div className={`next ${nextClass}`}><span className="dot" /><span className="t">{next}</span><span className="btns">{nextBtns}</span></div>
 
@@ -183,8 +181,8 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
           <div className="skills">{ct.skills.map((k) => <span key={k} className="tag" style={{ fontSize: 12, padding: "3px 8px" }}>{k}</span>)}</div>
           <h2>Online</h2>
           {ct.social.map((sc, j) => c.socialsFound[j]
-            ? <div key={j} className="social"><span className="k">{sc[0]}</span><div><b>{sc[1]}</b> · {has(3) ? sc[2].replace("{n}", String(c.repos)).replace("{s}", String(c.stars)) : "Found, not checked yet"}</div></div>
-            : <div key={j} className="social none"><span className="k">{sc[0]}</span><div><b>{sc[1]}</b> · Not found</div></div>)}
+            ? <div key={j} className="social"><span className="k"><SocialIcon k={sc[0]} /></span><div><b>{sc[1]}</b> · {has(3) ? sc[2].replace("{n}", String(c.repos)).replace("{s}", String(c.stars)) : "Found, not checked yet"}</div></div>
+            : <div key={j} className="social none"><span className="k"><SocialIcon k={sc[0]} /></span><div><b>{sc[1]}</b> · Not found</div></div>)}
         </section>
 
         <section className="d-part" id="p-activity">

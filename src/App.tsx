@@ -4,6 +4,7 @@ import { Drawer } from "./Drawer";
 import { CreateRole } from "./CreateRole";
 import { DataContext, useData } from "./data";
 import { ModeSwitch } from "./ModeSwitch";
+import { Logo } from "./icons";
 import { useConvexData } from "./data/convexData";
 import { useDemoData } from "./data/demoData";
 import type { DataApi, Mode } from "./types";
@@ -51,7 +52,7 @@ function Shell() {
   return (
     <div className="app">
       <aside className="side">
-        <div className="brand"><i />Callscreen</div>
+        <div className="brand"><Logo />Callscreen</div>
         <div className="nav-h">Roles</div>
         <nav>
           {roles?.map((r) => (

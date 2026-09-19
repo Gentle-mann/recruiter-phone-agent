@@ -3,6 +3,7 @@ import { CONTENT, STAGES, STAGE_LABEL, fmtAgo, fmtDur, initials, type Stage } fr
 import { useNow } from "./useNow";
 import { useData } from "./data";
 import { ModeSwitch } from "./ModeSwitch";
+import { SocialIcon } from "./icons";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -27,7 +28,7 @@ function CardRight({ c, role, now }: { c: Cand; role: Role; now: number }) {
   if (i === 1) return c.app % 3 === 0 ? <span className="thinking"><i /><i /><i /></span> : <span>{c.app}</span>;
   if (i === 2) {
     const keys = CONTENT[role.contentKey].social;
-    return <span className="tags">{keys.map((k, j) => <span key={j} className={"tag" + (c.socialsFound[j] ? "" : " off")}>{k[0]}</span>)}</span>;
+    return <span className="tags">{keys.map((k, j) => <span key={j} className={"tag" + (c.socialsFound[j] ? "" : " off")} title={k[1]}><SocialIcon k={k[0]} /></span>)}</span>;
   }
   if (i === 3) return c.live ? <><Wave /><span className="dur">{fmtDur(liveDur(c, now))}</span></> : <span>{c.taken ? "yours" : "queued"}</span>;
   const low = c.final < role.threshold;

@@ -1,0 +1,15 @@
+import puppeteer from "puppeteer-core";
+const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const page = await browser.newPage();
+await page.setViewport({ width: 1440, height: 1000 });
+await page.goto("http://localhost:5180", { waitUntil: "networkidle0" });
+await page.click(".mode button:first-child");
+await page.waitForSelector(".col.s4 .card", { timeout: 20000 });
+await page.click(".col.s4 .card");
+await new Promise((r) => setTimeout(r, 800));
+await page.screenshot({ path: ".context/icons-drawer-top.png" });
+await page.click('.d-tabs a[href="#p-background"]');
+await new Promise((r) => setTimeout(r, 900));
+await page.screenshot({ path: ".context/icons-drawer-bg.png" });
+await browser.close();
+console.log("saved");
