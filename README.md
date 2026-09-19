@@ -21,7 +21,7 @@ The frontend runs locally and talks to the production Convex deployment. `VITE_C
 
 The switch at the top right of the board picks the data source.
 
-- **Live** reads and writes the Convex production deployment. Nothing moves unless a real event or a recruiter action moves it.
+- **Live** reads and writes the Convex production deployment. It starts empty. Nothing moves unless a real event or a recruiter action moves it.
 - **Demo** is UI only. It runs an in-memory copy with a simulation that adds applicants and moves people through stages. Nothing is sent to the backend. The choice is remembered per browser.
 
 The data layer lives in `src/data/`: `convexData.ts` for live, `demoData.ts` for demo, both implementing `DataApi` from `src/types.ts`.
@@ -30,8 +30,8 @@ The data layer lives in `src/data/`: `convexData.ts` for live, `demoData.ts` for
 
 ```
 npm run deploy     # push convex/ to production
-npm run seed       # seed three sample roles into production (no-op if roles exist)
-npm run reset      # wipe production and reseed the sample roles
+npm run reset      # wipe production and load three sample roles (optional, for testing Live)
+npx convex run seed:clear --prod   # wipe production back to empty
 ```
 
 ## Screenshots

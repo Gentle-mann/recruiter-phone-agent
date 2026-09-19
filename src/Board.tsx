@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CONTENT, STAGES, STAGE_LABEL, fmtAgo, fmtDur, initials, type Stage } from "./content";
 import { useNow } from "./useNow";
 import { useData } from "./data";
+import { ModeSwitch } from "./ModeSwitch";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -43,7 +44,7 @@ function cardMeta(c: Cand, role: Role, now: number) {
 }
 
 export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => void }) {
-  const { data, mode, setMode } = useData();
+  const { data } = useData();
   const cands = data.useCandidates(role._id);
   const now = useNow();
   const [q, setQ] = useState("");
@@ -82,11 +83,7 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
             <input placeholder="Find a candidate" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
-          {mode === "demo" && <span className="mode-hint">Demo data, nothing is saved</span>}
-          <div className="mode" role="group" aria-label="Data mode">
-            <button className={mode === "demo" ? "on" : ""} onClick={() => setMode("demo")}>Demo</button>
-            <button className={mode === "live" ? "on" : ""} onClick={() => setMode("live")}>Live</button>
-          </div>
+          <ModeSwitch />
         </div>
       </header>
       <div className="board">

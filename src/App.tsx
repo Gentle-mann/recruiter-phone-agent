@@ -3,6 +3,7 @@ import { Board } from "./Board";
 import { Drawer } from "./Drawer";
 import { CreateRole } from "./CreateRole";
 import { DataContext, useData } from "./data";
+import { ModeSwitch } from "./ModeSwitch";
 import { useConvexData } from "./data/convexData";
 import { useDemoData } from "./data/demoData";
 import type { DataApi, Mode } from "./types";
@@ -71,7 +72,20 @@ function Shell() {
       </aside>
 
       <main>
-        {view === "pipeline" && (role ? <Board role={role} onOpen={setOpenId} /> : <div className="loading">{roles ? "Create a role to start screening." : "Loading…"}</div>)}
+        {view === "pipeline" && (role ? <Board role={role} onOpen={setOpenId} /> : (
+          <section className="view active">
+            <header className="top">
+              <div><h1>{roles ? "No roles yet" : "Loading…"}</h1>{roles && <p className="sub">Create a role and the agent starts screening as applications come in.</p>}</div>
+              <div className="top-actions"><ModeSwitch /></div>
+            </header>
+            {roles && (
+              <div className="empty-main">
+                <button className="btn primary" onClick={() => setView("create")}>New role</button>
+                <span>or switch to Demo to see the product with sample data</span>
+              </div>
+            )}
+          </section>
+        ))}
         {view === "create" && (
           <CreateRole onCancel={() => setView("pipeline")} onCreated={(id) => { setRoleId(id); setView("pipeline"); }} />
         )}

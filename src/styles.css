@@ -366,3 +366,4 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .mode button:hover { color: var(--ink); }
 .mode button.on { background: var(--ink); color: #fff; }
 .mode-hint { color: var(--ink-3); font-size: 12px; padding-right: 4px; }
+.empty-main { display: flex; align-items: center; gap: 12px; padding: 18px 28px; color: var(--ink-3); }
