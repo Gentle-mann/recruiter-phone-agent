@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
+import type { Id } from "../convex/_generated/dataModel";
 import { Board } from "./Board";
 import { Drawer } from "./Drawer";
 import { CreateRole } from "./CreateRole";
@@ -8,20 +11,27 @@ import { Logo } from "./icons";
 import { Apply } from "./Apply";
 import { useConvexData } from "./data/convexData";
 import { useDemoData } from "./data/demoData";
+import { consumeWalkthrough, WALK_CHANNEL, WALK_STORAGE, type Walkthrough } from "./walkChannel";
+import { runLiveScreening } from "./livePipeline";
 import type { DataApi, Mode } from "./types";
 
 const MODE_KEY = "callscreen.mode";
+const hasConvex = Boolean(import.meta.env.VITE_CONVEX_URL);
 
 export default function App() {
-  const m = location.pathname.match(/^\/apply\/([^/]+)\/?$/);
-  if (m) return <Apply slug={decodeURIComponent(m[1])} />;
+  const path = location.pathname.replace(/\/$/, "") || "/";
+  const apply = path.match(/^\/apply(?:\/([^/]+))?$/);
+  if (apply) return <Apply slug={apply[1] ? decodeURIComponent(apply[1]) : undefined} />;
   return <Admin />;
 }
 
 function Admin() {
-  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem(MODE_KEY) === "demo" ? "demo" : "live"));
+  const [mode, setMode] = useState<Mode>(() => {
+    const saved = localStorage.getItem(MODE_KEY);
+    if (saved === "demo" || saved === "live") return saved;
+    return hasConvex ? "live" : "demo";
+  });
   useEffect(() => { localStorage.setItem(MODE_KEY, mode); }, [mode]);
-  // Keyed on mode so switching remounts the tree with a fresh data source.
   return mode === "demo" ? <DemoShell key="demo" setMode={setMode} /> : <LiveShell key="live" setMode={setMode} />;
 }
 
@@ -30,11 +40,42 @@ function DemoShell({ setMode }: { setMode: (m: Mode) => void }) {
   return <Provider data={data} setMode={setMode} />;
 }
 function LiveShell({ setMode }: { setMode: (m: Mode) => void }) {
+  if (!hasConvex) {
+    return (
+      <div className="apply">
+        <p className="apply-lead">Live mode needs VITE_CONVEX_URL in callscreen/.env.</p>
+        <button className="btn primary" type="button" onClick={() => setMode("demo")}>Use Demo</button>
+      </div>
+    );
+  }
+  return <ConnectedLive setMode={setMode} />;
+}
+function ConnectedLive({ setMode }: { setMode: (m: Mode) => void }) {
   const data = useConvexData();
   return <Provider data={data} setMode={setMode} />;
 }
 function Provider({ data, setMode }: { data: DataApi; setMode: (m: Mode) => void }) {
   return <DataContext.Provider value={{ data, mode: data.mode, setMode }}><Shell /></DataContext.Provider>;
+}
+
+function LivePipeline({ onFocus }: { onFocus: (msg: Walkthrough) => void }) {
+  const screen = useMutation(api.candidates.advance);
+  useEffect(() => {
+    const run = (msg: Walkthrough) => {
+      onFocus(msg);
+      void runLiveScreening(msg, (id) => screen({ id: id as Id<"candidates"> }).then(() => {}));
+    };
+    const pending = consumeWalkthrough();
+    if (pending) run(pending);
+    const channel = new BroadcastChannel(WALK_CHANNEL);
+    channel.onmessage = (e) => {
+      if (!e.data?.candidateId) return;
+      localStorage.removeItem(WALK_STORAGE);
+      run(e.data as Walkthrough);
+    };
+    return () => channel.close();
+  }, [screen, onFocus]);
+  return null;
 }
 
 function Shell() {
@@ -43,6 +84,11 @@ function Shell() {
   const [roleId, setRoleId] = useState<string | null>(null);
   const [view, setView] = useState<"pipeline" | "create">("pipeline");
   const [openId, setOpenId] = useState<string | null>(null);
+  const onWalkthrough = useCallback((msg: Walkthrough) => {
+    setRoleId(msg.roleId);
+    setView("pipeline");
+    setOpenId(msg.candidateId);
+  }, []);
 
   useEffect(() => {
     if (roles && roles.length && (!roleId || !roles.some((r) => r._id === roleId))) setRoleId(roles[0]._id);
@@ -58,6 +104,7 @@ function Shell() {
 
   return (
     <div className="app">
+      {data.mode === "live" && <LivePipeline onFocus={onWalkthrough} />}
       <aside className="side">
         <div className="brand"><Logo />Callscreen</div>
         <div className="nav-h">Roles</div>
@@ -76,7 +123,10 @@ function Shell() {
             New role
           </span>
         </button>
-        <div className="side-foot"><a href="#">Settings</a></div>
+        <div className="side-foot">
+          <a href="/apply" target="_blank" rel="noreferrer">Application</a>
+          <a href="#">Settings</a>
+        </div>
       </aside>
 
       <main>

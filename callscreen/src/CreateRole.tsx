@@ -71,7 +71,7 @@ export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCr
             <div className="field"><label>Title</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             <div className="row2">
               <div className="field"><label>Team</label><input type="text" value={team} onChange={(e) => setTeam(e.target.value)} /></div>
-              <div className="field"><label>Location</label><input type="text" defaultValue="Remote, Europe" /></div>
+              <div className="field"><label>Location</label><input type="text" defaultValue="Remote, US" /></div>
             </div>
             <div className="row2">
               <div className="field"><label>Type</label><select><option>Full-time</option><option>Contract</option><option>Part-time</option></select></div>
@@ -89,7 +89,7 @@ export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCr
           <div className="step"><div className="num">2</div><div>
             <h2>Application screen</h2><p className="help">{agent} reads the résumé and the form answers. Knockouts reject on the spot, must-haves are scored, nice-to-haves break ties.</p>
             <div className="field"><label>Knockout questions</label>
-              <QList addLabel="+ Add knockout" init={[["Are you legally able to work in the EU without sponsorship?", "Must answer: Yes"], ["Can you start within 3 months?", "Must answer: Yes"], ["Link to your portfolio", "Must be provided"]]} />
+              <QList addLabel="+ Add knockout" init={[["Are you authorized to work in the US without sponsorship?", "Must answer: Yes"], ["Can you start within 3 months?", "Must answer: Yes"], ["Link to your portfolio", "Must be provided"]]} />
             </div>
             <div className="field"><label>Must-haves</label>
               <div className="chips">{musts.map((t) => <span key={t} className="chip">{t} <button aria-label="Remove" onClick={() => setMusts(musts.filter((x) => x !== t))}>×</button></span>)}<button className="chip add" onClick={() => { const t = prompt("Must-have"); if (t) setMusts([...musts, t]); }}>+ Add</button></div>
@@ -138,8 +138,8 @@ export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCr
             </div>
             <div className="field"><label>What {agent} can answer if asked</label>
               <QList init={[
-                ["Salary range", "€70k–85k plus equity. Share the range if asked."],
-                ["Remote policy", "Remote anywhere in the EU, two team weeks a year in Lisbon."],
+                ["Salary range", "$130k–150k plus equity. Share the range if asked."],
+                ["Remote policy", "Remote anywhere in the US, two team weeks a year in Austin."],
                 ["Team", "One PM, three engineers, you'd be the first designer. Reports to Mark."],
                 ["Process after this call", "45-min portfolio review with Mark, then a half-day paid design exercise. Two weeks end to end."],
               ]} />
@@ -186,7 +186,7 @@ export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCr
               <div className="bub cand">The onboarding redesign at Linear. I owned it end to end, from research to the final handoff…</div>
               <div className="bub sys">…</div>
               <div className="bub cand">What's the salary range?</div>
-              <div className="bub agent">Seventy to eighty-five thousand euros, plus equity.</div>
+              <div className="bub agent">One thirty to one fifty, plus equity.</div>
               <div className="bub agent">That's everything from me. Mark will be in touch within two days. Thanks, Aiko.</div>
             </div>
           </div>

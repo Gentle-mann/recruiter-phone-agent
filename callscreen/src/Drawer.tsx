@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useData } from "./data";
 import { MailIcon, PhoneIcon, ResumeIcon, SocialIcon, LinkedInIcon } from "./icons";
 import type { Role } from "./types";
-import { CONTENT, STAGES, TZ, fill, fmtAgo, fmtDur, hash, initials, pr } from "./content";
-import { Wave, liveDur } from "./Board";
+import { CONTENT, BOARD_STAGES, STAGES, TZ, fill, fmtAgo, fmtDur, hash, initials, pr, boardStage } from "./content";
+import { useVoice, callSeconds } from "./voiceStore";
+import { useScreen } from "./screenStore";
 import { useNow } from "./useNow";
 
 const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" dangerouslySetInnerHTML={{ __html: d }} />;
@@ -15,6 +16,10 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   const reject = (a: { id: string }) => data.reject(a.id);
   const addNote = (a: { id: string; text: string }) => data.addNote(a.id, a.text);
   const now = useNow();
+  const voice = useVoice(id);
+  const screen = useScreen(id);
+  const seconds = c ? callSeconds(c, now, voice) : 0;
+  const calling = !!(c && (c.live || (STAGES.indexOf(c.stage) === 3 && voice && !voice.ended)));
   const body = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState("p-overview");
   const [note, setNote] = useState("");
@@ -33,29 +38,39 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
 
   const ct = CONTENT[role.contentKey];
   const i = STAGES.indexOf(c.stage);
+  const bi = BOARD_STAGES.indexOf(boardStage(c.stage));
   const has = (k: number) => i >= k;
   const low = c.final < role.threshold;
   const first = c.name.split(" ")[0];
   const title = ct.titles[hash(c._id) % ct.titles.length];
   const email = c.email ?? c.name.toLowerCase().replace(/[^a-z ]/g, "").replace(" ", ".") + "@gmail.com";
   const phone = c.phone || `+351 91 ${200 + hash(c._id) % 700} ${100 + hash(c._id) % 900}`;
-  const fromForm = c.source === "Careers page" && !c.company;
+  const fromForm = c.source === "Careers page";
   const tz = TZ[c.loc] ?? "GMT";
   const agoMs = now - c.appliedAt;
   const P = (k: number) => pr(c._id, k);
 
   // ---- next step ----
   let next: React.ReactNode, nextBtns: React.ReactNode = null, nextClass = `s${i}`;
-  if (i === 0) next = <><b>{role.agent} is reading the application.</b> Usually done within the hour.</>;
-  else if (i === 1) next = <><b>Next: socials check.</b> Application scored {c.app}, above the bar.</>;
+  if (screen?.stage === "application") next = <><b>{screen.current}.</b> Matching this application against the {role.name} job description.</>;
+  else if (screen?.stage === "socials") next = <><b>{screen.current}.</b> Checking LinkedIn and Instagram against the résumé.</>;
+  else if (i === 0 || i === 1) next = i === 0
+    ? <><b>{role.agent} is reading the application.</b> Checking match with the job description.</>
+    : <><b>Next: socials check.</b> Application scored {c.app}, above the bar.</>;
   else if (i === 2) { next = <><b>Next: {role.agent} calls today at 14:00 {first}'s time.</b> A summary lands here within minutes of the call.</>; nextBtns = <button className="btn">Reschedule</button>; }
-  else if (i === 3 && c.live) { next = <><b>{role.agent} is on the phone with {first} now.</b> {fmtDur(liveDur(c, now))} so far.</>; nextBtns = <button className="btn">Listen in</button>; nextClass += " live"; }
+  else if (i === 3 && calling) {
+    next = voice?.error
+      ? <><b>Call did not start.</b> {voice.error}</>
+      : <><b>Step: {voice?.ask?.label || voice?.step || "Call"}.</b> {voice?.ask ? `${role.agent} is asking: ${voice.ask.prompt}` : `${role.agent} is on the phone with ${first} now.`} {fmtDur(seconds)} so far.</>;
+    nextBtns = <button className="btn">Listen in</button>;
+    nextClass += " live";
+  }
   else if (i === 3) { next = <><b>Call queued for 14:00 {first}'s time.</b> Text sent yesterday, {first} confirmed.</>; nextBtns = <button className="btn">Reschedule</button>; }
   else if (!low) { next = <><b>Waiting on you.</b> Above the bar. Book the interview with Mark?</>; nextBtns = <button className="btn primary">Book interview</button>; nextClass = "you"; }
   else { next = <><b>Decline email goes out in 18 hours</b> unless you override.</>; nextBtns = <button className="btn">Keep in process</button>; }
 
   // ---- verdict ----
-  const label = !has(4) ? (i === 3 && c.live ? "On the call now" : "Not scored yet") : low ? "Below the bar" : c.final >= 85 ? "Strong match" : "Worth a look";
+  const label = !has(4) ? (calling ? "On the call now" : "Not scored yet") : low ? "Below the bar" : c.final >= 85 ? "Strong match" : "Worth a look";
   const headline = has(4) ? (low ? "Probably not this one." : c.final >= 85 ? "Book the interview." : "Worth fifteen minutes of your time.") : "Still in progress.";
   const why = !has(4) ? `${role.agent} writes a summary here after the call.` : low ? `${ct.concerns[0]} ${ct.strengths[1]}` : `${ct.strengths[0]} ${ct.concerns[P(9) > .5 ? 0 : 1]}`;
   const Brow = ({ l, v, ok, k }: { l: string; v: number; ok: boolean; k: number }) => (
@@ -109,7 +124,7 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
       </div>
       <div className="d-body" ref={body} onScroll={onScroll}>
         <div className="d-head">
-          <span className={`av big s${i}`}>{initials(c.name)}</span>
+          <span className={`av big s${bi}`}>{initials(c.name)}</span>
           <div><h2>{c.name}</h2><p>{fromForm ? "" : `${title} at ${c.company} · `}{c.loc}, {tz} · applied {fmtAgo(agoMs)} ago via {c.source.toLowerCase()}</p></div>
         </div>
         <div className="links">
@@ -145,7 +160,7 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
             <>
               <h2>From the application</h2>
               <div className="kv">
-                <div><small>Work authorization</small><span className={c.authorized === false ? "warn" : ""}>{c.authorized ? "Yes, no sponsorship needed" : "Needs sponsorship"}</span></div>
+                <div><small>Work authorization</small><span className={c.authorized === false ? "warn" : ""}>{c.authorized ? "Authorized to work in the US" : "Needs US sponsorship"}</span></div>
                 <div><small>Earliest start</small><span>{c.startDate || "–"}</span></div>
                 {c.note && <div style={{ gridColumn: "1 / -1" }}><small>In their words</small><span>{c.note}</span></div>}
               </div>
@@ -164,10 +179,37 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
         </section>
 
         <section className="d-part" id="p-call">
-          <h2>Phone call {has(4) ? <span style={{ float: "right" }}>{c.call} of 100 · {fmtDur(c.callDur)}</span> : c.live ? <span style={{ float: "right" }}>Live</span> : null}</h2>
-          {has(4) || c.live ? (
+          <h2>Phone call {has(4) ? <span style={{ float: "right" }}>{c.call} of 100 · {fmtDur(seconds)}</span> : calling ? <span style={{ float: "right" }}>{voice?.status || "Live"}</span> : null}</h2>
+          {voice ? (
             <>
-              <div className="callbar"><button className="play" aria-label="Play recording"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5v9l8-4.5z" /></svg></button><div className="bars">{bars}</div><span className="dur">{c.live ? fmtDur(liveDur(c, now)) : `4:12 / ${fmtDur(c.callDur)}`}</span></div>
+              <div className="callbar"><button className="play" aria-label="Live call"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5v9l8-4.5z" /></svg></button><div className="bars">{bars}</div><span className="dur">{fmtDur(seconds)}</span></div>
+              {voice.error && <p className="apply-err">{voice.error}</p>}
+              <h2 style={{ marginTop: 22 }}>Live transcript</h2>
+              {voice.turns && voice.turns.length > 0 ? voice.turns.map((turn, k) => (
+                <div key={turn.id + k} className="tr">
+                  <span className="ts">{turn.label}</span>
+                  <div>
+                    <div className="q">{role.agent}: {turn.prompt}</div>
+                    <div className="a">{turn.answer || (calling ? "Listening…" : "No reply captured.")}</div>
+                  </div>
+                </div>
+              )) : null}
+              {calling && voice.ask && !voice.turns.some((t) => t.id === voice.ask!.id && t.answer) && (
+                <div className="tr">
+                  <span className="ts">{voice.ask.label}</span>
+                  <div>
+                    <div className="q">{role.agent}: {voice.ask.prompt}</div>
+                    <div className="a">{voice.status === "dialing" || voice.status === "queued" || voice.status === "ringing" ? "Ringing…" : `${first} is speaking…`}</div>
+                  </div>
+                </div>
+              )}
+              {(!voice.turns || voice.turns.length === 0) && !(calling && voice.ask) && (
+                <p style={{ color: "var(--ink-2)", margin: 0 }}>{voice.error ? "The board is waiting on the voice agent." : "Dialing the screening number…"}</p>
+              )}
+            </>
+          ) : has(4) || c.live ? (
+            <>
+              <div className="callbar"><button className="play" aria-label="Play recording"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5v9l8-4.5z" /></svg></button><div className="bars">{bars}</div><span className="dur">{calling ? fmtDur(seconds) : `4:12 / ${fmtDur(seconds)}`}</span></div>
               <div className="attempts"><span>1st attempt: no answer, voicemail left</span><span>2nd attempt: connected</span><span>Recording consent: yes</span></div>
               {!c.live && <div className="note" style={{ marginTop: 14 }}><b>{role.agent}'s note.</b> {ct.note[c.noteIdx]}</div>}
               <h2 style={{ marginTop: 22 }}>Transcript</h2>

@@ -19,14 +19,16 @@ The frontend runs locally and talks to the production Convex deployment. `VITE_C
 
 ## Application page
 
-Every role has a public application form at `/apply/<slug>`, for example `/apply/backend-engineer`. The link sits under the role title on the board with Copy and Open buttons. Submissions create a candidate in the Applied stage on the live backend, with the résumé stored in Convex file storage. The page always talks to production, whatever mode the admin is in.
+`/apply` (or `/apply/<role-slug>`) is the application form. Jordan Lee is filled in; **Prefill sample** loads another demo applicant. Submit creates a candidate on the **Live** Convex board, auto-plays Applied → Application → Socials → Phone call, then Flask dials `TWILIO_TO`.
 
 ## Demo and Live
 
 The switch at the top right of the board picks the data source.
 
-- **Live** reads and writes the Convex production deployment. It starts empty. Nothing moves unless a real event or a recruiter action moves it.
+- **Live** reads and writes the Convex production deployment. The filled `/apply` walkthrough lands here.
 - **Demo** is UI only. It runs an in-memory copy with a simulation that adds applicants and moves people through stages. Nothing is sent to the backend. The choice is remembered per browser.
+
+Copy `callscreen/.env.example` to `callscreen/.env`. Demo works without Convex. Never commit `.env`.
 
 The data layer lives in `src/data/`: `convexData.ts` for live, `demoData.ts` for demo, both implementing `DataApi` from `src/types.ts`.
 

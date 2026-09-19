@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Callscreen voice agent</title>
+    <style>
+      :root {
+        --bg: #14120f;
+        --panel: #1c1915;
+        --ink: #f3ece0;
+        --muted: #b4a894;
+        --line: #3a342c;
+        --accent: #d97706;
+        --accent-ink: #1a1208;
+        --ok: #86c08a;
+        --err: #e07a6a;
+        --mono: ui-monospace, "SF Mono", Menlo, monospace;
+        --sans: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+
+      body {
+        display: grid;
+        grid-template-columns: minmax(280px, 42%) 1fr;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .rail {
+        padding: 28px 32px 40px;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .kicker {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 34px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .lede {
+        margin: 0 0 28px;
+        max-width: 36ch;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      form {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #100e0c;
+        color: var(--ink);
+      }
+
+      textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: 2px solid color-mix(in srgb, var(--accent) 70%, white);
+        outline-offset: 1px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .go {
+        margin-top: 6px;
+        padding: 12px 16px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .go:hover {
+        filter: brightness(1.05);
+      }
+
+      .go:active {
+        transform: translateY(1px);
+      }
+
+      .go:disabled {
+        opacity: 0.55;
+        cursor: wait;
+      }
+
+      .hint {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .err {
+        margin: 10px 0 0;
+        color: var(--err);
+        font-size: 13px;
+      }
+
+      .stage {
+        padding: 28px 32px 40px;
+        display: grid;
+        align-content: start;
+        gap: 18px;
+      }
+
+      .card {
+        padding: 18px 18px 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--panel) 88%, black);
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .meta div {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+      }
+
+      .meta div:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .meta span {
+        color: var(--muted);
+      }
+
+      .answer {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+      }
+
+      .empty {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .script {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .script li + li {
+        margin-top: 8px;
+      }
+
+      .turns {
+        display: grid;
+        gap: 12px;
+      }
+
+      .turn span {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .turn p {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.35;
+      }
+
+      .log {
+        margin: 0;
+        max-height: 46dvh;
+        overflow: auto;
+        display: grid;
+        gap: 10px;
+      }
+
+      .log p {
+        margin: 0;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .log b {
+        display: inline-block;
+        min-width: 64px;
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .ok {
+        color: var(--ok);
+      }
+
+      @media (max-width: 860px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+
+        .rail {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="rail">
+      <p class="kicker">Callscreen screening agent</p>
+      <h1>Recruiter call.</h1>
+      <p class="lede">Calls as June from Callscreen, walks a short Backend Engineer screen, and transcribes each reply.</p>
+      <form id="form">
+        <div class="row">
+          <label>
+            From
+            <input id="from_number" name="from_number" autocomplete="off" />
+          </label>
+          <label>
+            To
+            <input id="to_number" name="to_number" autocomplete="off" />
+          </label>
+        </div>
+        <label>
+          Candidate name
+          <input id="candidate_name" name="candidate_name" autocomplete="off" />
+        </label>
+        <ol class="script" id="script"></ol>
+        <label>
+          Auth token
+          <input id="auth_token" name="auth_token" type="password" placeholder="From the Twilio console" autocomplete="off" />
+        </label>
+        <button class="go" id="start" type="submit">Start call</button>
+      </form>
+      <p class="hint" id="tunnel"></p>
+      <p class="err" id="error" hidden></p>
+    </section>
+
+    <section class="stage">
+      <div class="card">
+        <h2>This call</h2>
+        <div class="meta">
+          <div><span>Status</span><strong id="status">idle</strong></div>
+          <div><span>SID</span><strong id="sid">-</strong></div>
+          <div><span>Step</span><strong id="step">idle</strong></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Transcript</h2>
+        <div class="turns" id="answer"><p class="empty">Waiting for the screening to start.</p></div>
+      </div>
+      <div class="card">
+        <h2>Log</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const form = $("form");
+      const error = $("error");
+
+      function showError(message) {
+        error.hidden = !message;
+        error.textContent = message || "";
+      }
+
+      function addLog(event) {
+        const line = document.createElement("p");
+        const kind = document.createElement("b");
+        kind.textContent = event.kind;
+        line.append(kind, " ", event.message);
+        $("log").prepend(line);
+      }
+
+      function renderScript(script, name) {
+        const list = $("script");
+        list.innerHTML = "";
+        const person = name || "Mister";
+        (script || []).forEach((step) => {
+          const item = document.createElement("li");
+          item.textContent = step.prompt.replaceAll("{name}", person);
+          list.append(item);
+        });
+        const close = document.createElement("li");
+        close.textContent = "Great. Thanks for your time, " + person + ". Have a good day!";
+        list.append(close);
+      }
+
+      function renderTurns(turns) {
+        const el = $("answer");
+        if (!turns || !turns.length) {
+          el.innerHTML = '<p class="empty">Waiting for the screening to start.</p>';
+          return;
+        }
+        el.innerHTML = "";
+        turns.forEach((turn) => {
+          const wrap = document.createElement("div");
+          wrap.className = "turn";
+          const label = document.createElement("span");
+          label.textContent = turn.label;
+          const body = document.createElement("p");
+          body.textContent = turn.answer || "No reply captured.";
+          wrap.append(label, body);
+          el.append(wrap);
+        });
+      }
+
+      function applyState(data) {
+        if (!form.from_number.value) form.from_number.value = data.from_number || "";
+        if (!form.to_number.value) form.to_number.value = data.to_number || "";
+        if (!form.candidate_name.value) form.candidate_name.value = data.candidate_name || "";
+        renderScript(data.script, form.candidate_name.value || data.candidate_name);
+        $("tunnel").textContent = data.public_base_url
+          ? "Twilio can reach this app at " + data.public_base_url
+          : "Opening a public tunnel for Twilio...";
+        if (data.has_auth_token && !form.auth_token.placeholder.includes("saved")) {
+          form.auth_token.placeholder = "Saved on this machine";
+        }
+        const call = data.call;
+        if (!call) return;
+        $("status").textContent = call.status;
+        $("sid").textContent = call.sid || "-";
+        $("step").textContent = call.step || "-";
+        renderTurns(call.turns);
+      }
+
+      async function loadState() {
+        const data = await fetch("/api/state").then((r) => r.json());
+        applyState(data);
+        $("log").innerHTML = "";
+        (data.events || []).slice().reverse().forEach(addLog);
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        showError("");
+        $("start").disabled = true;
+        renderTurns([]);
+        $("step").textContent = "opening";
+        try {
+          const payload = {
+            from_number: form.from_number.value.trim(),
+            to_number: form.to_number.value.trim(),
+            candidate_name: form.candidate_name.value.trim(),
+            auth_token: form.auth_token.value.trim(),
+          };
+          const res = await fetch("/api/call", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Call failed");
+          $("status").textContent = data.status;
+          $("sid").textContent = data.sid;
+          form.auth_token.value = "";
+        } catch (err) {
+          renderTurns([]);
+          showError(err.message);
+        } finally {
+          $("start").disabled = false;
+        }
+      });
+
+      const events = new EventSource("/api/events");
+      events.onmessage = (message) => {
+        const event = JSON.parse(message.data);
+        addLog(event);
+        if (event.kind === "status") $("status").textContent = event.message;
+        if (event.kind === "ask" && event.extra && event.extra.step) {
+          $("step").textContent = event.extra.step;
+        }
+        if (event.kind === "answer") {
+          $("step").textContent = (event.extra && event.extra.step) || $("step").textContent;
+          const wrap = document.createElement("div");
+          wrap.className = "turn";
+          const label = document.createElement("span");
+          label.textContent = (event.extra && event.extra.label) || "Reply";
+          const body = document.createElement("p");
+          body.textContent = event.message;
+          wrap.append(label, body);
+          const empty = $("answer").querySelector(".empty");
+          if (empty) $("answer").innerHTML = "";
+          $("answer").append(wrap);
+        }
+      };
+
+      form.candidate_name.addEventListener("input", () => {
+        fetch("/api/state")
+          .then((r) => r.json())
+          .then((data) => renderScript(data.script, form.candidate_name.value));
+      });
+
+      loadState();
+    </script>
+  </body>
+</html>

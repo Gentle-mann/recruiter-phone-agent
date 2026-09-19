@@ -7,9 +7,9 @@ const OpenIcon = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3.5H3.5v9h9V10M9.5 3h3.5v3.5M13 3L7.5 8.5" /></svg>
 );
 
-/** The role's public application URL. Click copies, the arrow opens it. */
-export function ApplyLink({ slug }: { slug: string }) {
-  const url = `${location.origin}/apply/${slug}`;
+/** The public application URL. */
+export function ApplyLink() {
+  const url = `${location.origin}/apply`;
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try { await navigator.clipboard.writeText(url); } catch { /* clipboard blocked */ }
@@ -17,7 +17,7 @@ export function ApplyLink({ slug }: { slug: string }) {
   };
   return (
     <span className="applylink">
-      <button className="btn" onClick={copy} title={`Copy ${url}`}><LinkIcon />{copied ? "Copied" : `apply/${slug}`}</button>
+      <button className="btn" onClick={copy} title={`Copy ${url}`}><LinkIcon />{copied ? "Copied" : "apply"}</button>
       <a className="btn icon" href={url} target="_blank" rel="noreferrer" title="Open application page" aria-label="Open application page"><OpenIcon /></a>
     </span>
   );

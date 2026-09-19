@@ -30,6 +30,13 @@ export const DribbbleIcon = () => <Fill d={DRIBBBLE} title="Dribbble" />;
 export const GlobeIcon = () => (
   <Stroke title="Website"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c2 2.2 2 9.8 0 12M8 2c-2 2.2-2 9.8 0 12" /></Stroke>
 );
+export const InstagramIcon = () => (
+  <Stroke title="Instagram">
+    <rect x="2.5" y="2.5" width="11" height="11" rx="3" />
+    <circle cx="8" cy="8" r="2.6" />
+    <circle cx="11.2" cy="4.8" r="0.6" fill="currentColor" stroke="none" />
+  </Stroke>
+);
 export const ResumeIcon = () => (
   <Stroke title="Résumé"><path d="M4 1.5h5l3 3v10H4z" /><path d="M9 1.5v3h3M6 8h4M6 10.5h4M6 13h2.5" /></Stroke>
 );
@@ -45,6 +52,7 @@ export function SocialIcon({ k }: { k: string }) {
   switch (k) {
     case "gh": return <GitHubIcon />;
     case "in": return <LinkedInIcon />;
+    case "ig": return <InstagramIcon />;
     case "x": return <XIcon />;
     case "dr": return <DribbbleIcon />;
     default: return <GlobeIcon />;

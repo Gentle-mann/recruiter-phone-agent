@@ -12,5 +12,6 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "convex"]
+  "include": ["src", "convex"],
+  "exclude": ["src/**/*.test.ts"]
 }

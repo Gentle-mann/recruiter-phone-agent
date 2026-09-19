@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { CONTENT, STAGES, STAGE_LABEL, fmtAgo, fmtDur, initials, type Stage } from "./content";
+import { CONTENT, BOARD_STAGES, STAGE_LABEL, boardStage, fmtAgo, fmtDur, initials, type Stage } from "./content";
 import { useNow } from "./useNow";
 import { useData } from "./data";
 import { SocialIcon } from "./icons";
 import { ApplyLink } from "./ApplyLink";
 import { ModeSwitch } from "./ModeSwitch";
+import { useVoice, callSeconds } from "./voiceStore";
+import { useScreen } from "./screenStore";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -21,28 +23,36 @@ export const Wave = ({ still }: { still?: boolean }) => (
   <span className={"wave" + (still ? " still" : "")}><i /><i /><i /><i /><i /></span>
 );
 
-export const liveDur = (c: Cand, now: number) => (c.live && c.callStartedAt ? Math.floor((now - c.callStartedAt) / 1000) : c.callDur);
-
-function CardRight({ c, role, now }: { c: Cand; role: Role; now: number }) {
-  const i = STAGES.indexOf(c.stage);
-  if (i === 0) return <span>{fmtAgo(now - c.appliedAt)}</span>;
-  if (i === 1) return c.app % 3 === 0 ? <span className="thinking"><i /><i /><i /></span> : <span>{c.app}</span>;
-  if (i === 2) {
-    const keys = CONTENT[role.contentKey].social;
-    return <span className="tags">{keys.map((k, j) => <span key={j} className={"tag" + (c.socialsFound[j] ? "" : " off")} title={k[1]}><SocialIcon k={k[0]} /></span>)}</span>;
+function CardRight({ c, role, calling, seconds, screen }: {
+  c: Cand; role: Role; calling: boolean; seconds: number; screen: ReturnType<typeof useScreen>;
+}) {
+  const stage = boardStage(c.stage);
+  if (stage === "application") return screen ? <span className="thinking"><i /><i /><i /></span> : (c.app % 3 === 0 ? <span className="thinking"><i /><i /><i /></span> : <span>{c.app}</span>);
+  if (stage === "socials") {
+    const live = screen?.stage === "socials";
+    const keys = live
+      ? [["in", "LinkedIn"], ["ig", "Instagram"]] as [string, string][]
+      : CONTENT[role.contentKey].social;
+    return (
+      <span className="tags">{keys.map((k, j) => {
+        const on = live
+          ? screen!.steps.some((s) => s.id.startsWith(j === 0 ? "li-" : "ig-") && (s.done || s.active))
+          : c.socialsFound[j];
+        return <span key={k[0] + j} className={"tag" + (on ? "" : " off")} title={k[1]}><SocialIcon k={k[0]} /></span>;
+      })}</span>
+    );
   }
-  if (i === 3) return c.live ? <><Wave /><span className="dur">{fmtDur(liveDur(c, now))}</span></> : <span>{c.taken ? "yours" : "queued"}</span>;
+  if (stage === "call") return calling ? <><Wave /><span className="dur">{fmtDur(seconds)}</span></> : <span>{c.taken ? "yours" : "queued"}</span>;
   const low = c.final < role.threshold;
   return <span className={"score" + (low ? " low" : "")}>{c.final}<Pie v={c.final} /></span>;
 }
 
-function cardMeta(c: Cand, role: Role, now: number) {
-  const i = STAGES.indexOf(c.stage);
-  if (i === 0) return `${c.source} · ${c.loc}`;
-  if (i === 1) return c.app % 3 === 0 ? "Reading résumé" : `${c.yrs} yrs · ${c.company}`;
-  if (i === 2) return `${c.socialsFound.filter(Boolean).length} of 3 profiles found`;
-  if (i === 3) return c.live ? `${role.agent} is on the call` : c.taken ? "You are calling" : "Calls at 14:00 local";
-  return c.taken ? "You took over" : `Called ${fmtAgo(now - c.appliedAt)} ago · ${fmtDur(c.callDur)}`;
+function cardMeta(c: Cand, role: Role, now: number, calling: boolean, seconds: number, screenCurrent?: string) {
+  const stage = boardStage(c.stage);
+  if (stage === "application") return screenCurrent || (c.app % 3 === 0 ? "Reading résumé" : `${c.yrs} yrs · ${c.company}`);
+  if (stage === "socials") return screenCurrent || `${c.socialsFound.filter(Boolean).length} of 3 profiles found`;
+  if (stage === "call") return calling ? `${role.agent} is on the call` : c.taken ? "You are calling" : "Calls at 14:00 local";
+  return c.taken ? "You took over" : `Called ${fmtAgo(now - c.appliedAt)} ago · ${fmtDur(seconds)}`;
 }
 
 export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => void }) {
@@ -51,7 +61,6 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
   const now = useNow();
   const [q, setQ] = useState("");
 
-  // Track stage changes so moved cards get an entrance animation.
   const prev = useRef(new Map<string, Stage>());
   const entered = new Set<string>();
   for (const c of cands ?? []) { const p = prev.current.get(c._id); if (p !== undefined && p !== c.stage) entered.add(c._id); if (p === undefined && prev.current.size) entered.add(c._id); }
@@ -61,12 +70,39 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
   const openedAgo = fmtAgo(now - role.openedAt);
 
   const Card = ({ c }: { c: Cand }) => {
-    const i = STAGES.indexOf(c.stage);
+    const stage = boardStage(c.stage);
+    const bi = BOARD_STAGES.indexOf(stage);
+    const voice = useVoice(c._id);
+    const screen = useScreen(c._id);
+    const calling = c.live || (stage === "call" && !!voice && !voice.ended);
+    const seconds = callSeconds(c, now, voice);
+    const first = c.name.split(" ")[0];
     return (
       <button className={"card" + (entered.has(c._id) ? " enter" : "")} onClick={() => onOpen(c._id)}>
-        <span className={`av s${i}`}>{initials(c.name)}</span>
-        <span className="who"><span className="name">{c.name}</span><span className="meta">{cardMeta(c, role, now)}</span></span>
-        <span className="side-r"><CardRight c={c} role={role} now={now} /></span>
+        <span className={`av s${bi}`}>{initials(c.name)}</span>
+        <span className="who">
+          <span className="name">{c.name}</span>
+          <span className="meta">{cardMeta(c, role, now, calling, seconds, screen?.current)}</span>
+          {screen && (
+            <ol className="card-steps">
+              {screen.steps.map((s) => (
+                <li key={s.id} className={s.done ? "done" : s.active ? "on" : ""}>
+                  <span className="mark">{s.done ? "✓" : s.active ? "→" : "·"}</span>
+                  {s.label}
+                </li>
+              ))}
+            </ol>
+          )}
+          {calling && voice && !voice.error && (
+            <div className="card-live">
+              <div className="step">{voice.ask?.label || "Dialing"}</div>
+              {voice.ask && <div className="q">{role.agent}: {voice.ask.prompt}</div>}
+              <div className="a">{first}: {voice.turns.find((t) => t.id === voice.ask?.id)?.answer
+                || (voice.status === "dialing" || voice.status === "queued" || voice.status === "ringing" ? "Ringing…" : "Listening…")}</div>
+            </div>
+          )}
+        </span>
+        <span className="side-r"><CardRight c={c} role={role} calling={calling} seconds={seconds} screen={screen} /></span>
       </button>
     );
   };
@@ -79,7 +115,7 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
           <p className="sub">{role.team} · opened {openedAgo.replace(/d$/, " days")} ago · {cands?.length ?? 0} applications</p>
         </div>
         <div className="top-actions">
-          <ApplyLink slug={role.slug} />
+          <ApplyLink />
           <label className="search">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
             <input placeholder="Find a candidate" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -88,8 +124,8 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
         </div>
       </header>
       <div className="board">
-        {STAGES.map((s, i) => {
-          let items = list.filter((c) => c.stage === s);
+        {BOARD_STAGES.map((s, i) => {
+          let items = list.filter((c) => boardStage(c.stage) === s);
           let body;
           if (s === "scored") {
             items = items.sort((a, b) => b.final - a.final);

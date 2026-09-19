@@ -1,4 +1,4 @@
-// Public endpoints used by the application page at /apply/<slug>.
+// Public endpoint used by /apply.
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 

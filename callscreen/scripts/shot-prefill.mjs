@@ -1,0 +1,11 @@
+import puppeteer from "puppeteer-core";
+const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const page = await browser.newPage();
+await page.setViewport({ width: 1100, height: 900 });
+await page.goto("http://localhost:5180/apply/backend-engineer", { waitUntil: "networkidle0" });
+await page.waitForSelector(".prefill", { timeout: 20000 });
+await page.click(".prefill");
+await new Promise((r) => setTimeout(r, 400));
+await page.screenshot({ path: "../.context/apply-prefill.png" });
+await browser.close();
+console.log("saved");

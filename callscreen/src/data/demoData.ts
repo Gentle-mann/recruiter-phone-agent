@@ -80,7 +80,6 @@ class DemoStore {
     }
   }
 
-  // ---- simulation ----
   start() {
     if (this.timers.length) return;
     this.timers = [
@@ -121,7 +120,6 @@ class DemoStore {
     this.emit();
   }
 
-  // ---- actions ----
   advance(id: string) {
     const c = this.cands.find((x) => x._id === id); if (!c) return;
     const i = STAGES.indexOf(c.stage); if (i >= STAGES.length - 1) return;
