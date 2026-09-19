@@ -36,17 +36,17 @@ export const CONTENT: Record<string, Pack> = {
       ["5+ years backend", "must", "résumé", ["{yrs} years across two companies, the last three at {company}.", "{yrs} years, but most of it full-stack with light backend.", "Résumé shows {yrs} years, mostly frontend."]],
       ["Owned a production system end to end", "must", "call 2:14", ["\"I owned {area} from the first design doc to on-call.\"", "\"I was one of three people on {area}.\" Shared ownership.", "Could not name a system they owned alone."]],
       ["Postgres at scale", "must", "GitHub", ["Repos and the call both point to real Postgres work: sharding, partitioning, query plans.", "Uses Postgres, but scale questions got general answers.", "No Postgres in résumé, repos, or call."]],
-      ["EU timezone overlap", "must", "call 5:40", ["\"{loc} is home, I am not planning to move.\"", "Willing to shift hours, currently 6h off.", "Would need 9h+ overlap shift. Said no."]],
+      ["US timezone overlap", "must", "call 5:40", ["\"{loc} is home, I am not planning to move.\"", "Willing to shift hours, currently 6h off.", "Would need 9h+ overlap shift. Said no."]],
       ["Go or Rust", "nice", "résumé", ["Go daily for four years.", "Some Go, mostly Python.", "Neither."]],
       ["Payments domain", "nice", "résumé", ["Two years on {area} at {company}.", "Adjacent: billing reconciliation tooling.", "None."]],
     ],
     history: [["Senior Backend Engineer", "{company}", "2022 – now"], ["Backend Engineer", "Farfetch", "2019 – 2022"], ["Software Engineer", "Talkdesk", "2017 – 2019"]],
     edu: "BSc Computer Science, Instituto Superior Técnico, 2017",
     skills: ["Go", "Postgres", "Kafka", "Kubernetes", "gRPC", "Terraform", "Redis", "Python"],
-    asked: ["How big is the platform team, and who would I report to?", "Is the role open to fully remote inside the EU?", "What does the rest of the process look like?"],
+    asked: ["How big is the platform team, and who would I report to?", "Is the role open to fully remote inside the US?", "What does the rest of the process look like?"],
     strengths: ["Specific about tradeoffs, owns mistakes without prompting.", "Postgres depth is real, backed by public repos.", "Wants to leave for the right reasons: a shrinking team, not a grievance."],
     concerns: ["Four-month gap in 2023 not explained on the call.", "Salary expectation is at the top of the band."],
-    logistics: { salary: "€95k–105k", start: "1 October", notice: "2 months", auth: "EU citizen", remote: "Remote, in {loc}", other: "2 other processes, one at final stage" },
+    logistics: { salary: "$160k–180k", start: "1 October", notice: "2 months", auth: "US citizen", remote: "Remote, in {loc}", other: "2 other processes, one at final stage" },
   },
   pd: {
     social: [
@@ -75,7 +75,7 @@ export const CONTENT: Record<string, Pack> = {
     asked: ["How many designers are on the team?", "Do designers own research here or is there a research team?", "What is the design review culture like?"],
     strengths: ["Owns outcomes, quotes activation numbers without being asked.", "Comfortable with engineers, opens PRs.", "Portfolio is current and shows process, not just finals."],
     concerns: ["Two roles under 12 months in a row.", "Little B2B experience."],
-    logistics: { salary: "€70k–80k", start: "15 November", notice: "1 month", auth: "EU citizen", remote: "Hybrid, {loc}", other: "One other process, early stage" },
+    logistics: { salary: "$130k–145k", start: "15 November", notice: "1 month", auth: "US citizen", remote: "Hybrid, {loc}", other: "One other process, early stage" },
   },
   ae: {
     social: [
@@ -94,9 +94,9 @@ export const CONTENT: Record<string, Pack> = {
       ["3+ years closing", "must", "résumé", ["{yrs} years carrying a quota at {company}.", "{yrs} years, 1 of them as SDR.", "Only SDR and BDR roles."]],
       ["Quota attainment 100%+", "must", "call 3:10", ["\"1.1M quota, 118% last year.\" Consistent with LinkedIn.", "Hit 94% one year and 118% the next.", "Would not give numbers."]],
       ["Sold to technical buyers", "must", "call 5:02", ["Sold devtools to engineering leaders for 2 years.", "Sold to ops, some technical evaluation involved.", "Sold to HR and finance buyers only."]],
-      ["Deal size €50k+", "must", "call 1:40", ["Average deal 180k ARR.", "Average 40k, largest 120k.", "SMB deals under 10k."]],
+      ["Deal size $50k+", "must", "call 1:40", ["Average deal 180k ARR.", "Average 40k, largest 120k.", "SMB deals under 10k."]],
       ["Outbound heavy", "nice", "call 6:15", ["70% self-sourced pipeline.", "Half inbound, half outbound.", "Inbound only."]],
-      ["EMEA experience", "nice", "résumé", ["EMEA mid-market at {company}.", "UK only.", "US only."]],
+      ["US mid-market experience", "nice", "résumé", ["US mid-market at {company}.", "US SMB only.", "EMEA only."]],
     ],
     history: [["Account Executive", "{company}", "2022 – now"], ["SDR then AE", "Pipedrive", "2019 – 2022"], ["Sales Associate", "Enterprise Rent-A-Car", "2018 – 2019"]],
     edu: "BA Business, University of Amsterdam, 2018",
@@ -104,7 +104,7 @@ export const CONTENT: Record<string, Pack> = {
     asked: ["What is the OTE split?", "How much of pipeline is inbound today?", "Who would I be selling with, is there an SE?"],
     strengths: ["Numbers were specific and matched LinkedIn.", "Handles objections by going back to pain, not features.", "High energy without being pushy."],
     concerns: ["OTE expectation is above the band.", "Only one full year above quota."],
-    logistics: { salary: "€120k OTE, 50/50", start: "1 November", notice: "1 month", auth: "EU citizen", remote: "Hybrid, {loc}", other: "Two other processes" },
+    logistics: { salary: "$180k OTE, 50/50", start: "1 November", notice: "1 month", auth: "Green card", remote: "Hybrid, {loc}", other: "Two other processes" },
   },
 };
 
