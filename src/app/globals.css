@@ -1344,3 +1344,63 @@ blockquote {
     scroll-behavior: auto !important;
   }
 }
+
+.agent-preview {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.agent-session {
+  padding: 28px;
+  margin-bottom: 20px;
+}
+.agent-session h2 {
+  margin: 20px 0 12px;
+}
+.agent-session > p {
+  line-height: 1.7;
+  color: var(--muted);
+}
+.agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+.agent-transcript {
+  max-height: 440px;
+  overflow-y: auto;
+  margin-top: 20px;
+}
+.agent-turn {
+  padding: 16px 0;
+  border-top: 1px solid #e8e9e2;
+}
+.agent-turn strong {
+  font-size: 12px;
+}
+.agent-turn p {
+  margin: 6px 0 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.agent-message {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+.agent-message input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d5dacd;
+  border-radius: 8px;
+}
+@media (max-width: 600px) {
+  .agent-session {
+    padding: 20px;
+  }
+  .agent-actions .button {
+    width: 100%;
+  }
+}

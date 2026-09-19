@@ -24,9 +24,19 @@ Open http://localhost:3000. The development server binds to loopback. No API key
 
 ## Demo boundaries
 
-All candidates, role information, transcripts, and briefs are fictional fixtures. The demo API selects an outcome; it does not run AI or make phone calls. No microphone, recording, external provider request, or personal phone number is used.
+The dashboard candidates, roles, transcripts, and briefs are fictional fixtures. The demo API never calls providers. The separate `/agent` page connects to a real ElevenLabs agent for voice or text practice after acknowledgment; audio/text is processed by ElevenLabs. No phone number is dialed.
 
 Session drafts and generated samples live in React memory and reset on page refresh. Seed examples remain available. The role editor creates drafts; the sample call always uses the original Northstar support role. The current app has no authentication, database, durable queue, or production deployment.
+
+## ElevenLabs browser connection
+
+The `/agent` page uses `@elevenlabs/react` with server-issued, single-use signed WebSocket URLs. Voice and text modes share the configured agent, with start/end controls and a session-only transcript.
+
+Copy `.env.example` to `.env.local`, set `ELEVENLABS_LOCAL_PREVIEW=true`, `ELEVENLABS_AGENT_ID`, and `ELEVENLABS_API_KEY`, then restart the server. Enable authentication on the ElevenLabs agent. The local project configuration already contains the created demo agent ID; its API key is intentionally blank until configured. Never commit `.env.local`.
+
+This is a **local developer preview**, not a public candidate endpoint: the server must remain bound to loopback. Session creation requires a matching localhost Origin. Do not expose it through a tunnel or reverse proxy; add real application authentication, quotas, and ownership checks before deployment. Configuration status is not proof of valid credentials; only a successful conversation confirms the connection.
+
+The configured demo agent uses a fictional Northstar support role, asks permission before interviewing, and makes no employment decisions. It requires authentication, ends after five minutes or 30 seconds of silence, allows one concurrent conversation and 30 per day, disables bursting/audio storage, and retains transcripts for seven days. The text-only override is enabled for microphone-free tests. These are provider settings, not guarantees enforced by the browser.
 
 ## Routes
 
@@ -36,6 +46,9 @@ Session drafts and generated samples live in React memory and reset on page refr
 | `/roles/new`                    | Save a role draft for the current session                  |
 | `/candidate`                    | Generate one of three fictional outcomes                   |
 | `/interviews/[id]`              | Review facts, evidence links, transcript, or empty outcome |
+| `/agent`                        | Live ElevenLabs browser practice (local only)              |
+| `GET /api/elevenlabs/status`    | Configuration status, without keys                         |
+| `POST /api/elevenlabs/session`  | Same-origin local session authorization                    |
 | `/integrations`                 | Integration status and official documentation              |
 | `GET /api/health`               | Demo health status, no secrets                             |
 | `POST /api/demo/calls`          | Validates `{ consent: true, scenario }`, returns a fixture |
@@ -67,7 +80,7 @@ docs/
 
 ## Connect real services next
 
-`.env.example` lists future server-side configuration. Copy it to `.env.local` when implementing adapters. Never prefix provider keys with `NEXT_PUBLIC_`, commit secrets, or expose them to the browser. Adding keys alone does not enable integrations.
+`.env.example` lists future server-side configuration. Copy it to `.env.local` when implementing adapters. Never prefix provider keys with `NEXT_PUBLIC_`, commit secrets, or expose them to the browser. Browser practice also requires `ELEVENLABS_LOCAL_PREVIEW=true`. Outbound phone calling remains disabled.
 
 Use ElevenLabs Agents for the call, a Twilio number linked in ElevenLabs, and Nebius Token Factory for question preparation and transcript analysis. Implement the providers under `src/server/providers/` after adding persistent applications, calling permission, authentication, and deduplicated attempts. See [architecture](docs/architecture.md).
 

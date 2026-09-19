@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AudioLines, BrainCircuit, Cable, ArrowUpRight } from "lucide-react";
 
 const integrations = [
@@ -40,7 +41,7 @@ export default function IntegrationsPage() {
             the conversation.
           </h1>
           <p className="subtitle">
-            Your workspace is ready for its next implementation step.
+            Try the ElevenLabs agent in a browser conversation.
           </p>
         </div>
       </div>
@@ -50,7 +51,11 @@ export default function IntegrationsPage() {
             <section className="panel integration-card" key={name}>
               <div className="integration-heading">
                 <Icon size={28} />
-                <span className="muted-tag">Not connected</span>
+                <span className="muted-tag">
+                  {name === "ElevenLabs"
+                    ? "Browser preview available"
+                    : "Not connected"}
+                </span>
               </div>
               <p className="eyebrow">{purpose}</p>
               <h2>{name}</h2>
@@ -69,11 +74,14 @@ export default function IntegrationsPage() {
         )}
       </div>
       <section className="panel implementation-note">
-        <h2>Scaffold status</h2>
+        <h2>Try the voice agent</h2>
+        <Link className="button primary" href="/agent">
+          Talk to agent
+        </Link>
         <p>
-          The demo works without accounts or API keys. Provider interfaces and
-          environment placeholders are included, but live calling and analysis
-          are not implemented. Adding a key alone will not turn them on.
+          Browser voice and text conversations are wired to ElevenLabs. The
+          local preview requires a server API key and agent ID. Phone calling,
+          automatic briefs, and Nebius analysis are still to come.
         </p>
         <p>
           Before live use: connect authentication, persistent application and

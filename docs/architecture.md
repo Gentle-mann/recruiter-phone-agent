@@ -6,6 +6,12 @@ Pages use server components where possible. Interactive views consume a shared R
 
 The `VoiceProvider` and `AnalysisProvider` contracts define where real integrations belong. Their current implementations throw `IntegrationNotConfiguredError` and import `server-only`. The live routes return 501 even when environment variables are present.
 
+## Current ElevenLabs browser preview
+
+`/agent` mounts the official React `ConversationProvider` only for the practice page. The server reads the private agent ID/key from `.env.local` and exchanges them for a single-use signed URL. It never returns the API key. Session responses are uncached; missing configuration, non-local/cross-origin requests, malformed consent, provider errors and unexpected signed-URL hosts fail closed. SDK callbacks drive connection status and transcript messages. Unmount ends the SDK session and cancels an outstanding token request.
+
+This intentionally requires a loopback-bound server. Host/Origin checks alone are not user authentication and must not be used for a public deployment. No real applicant details, ATS writes, outbound dialing, durable interview storage, or generated brief are connected. Provider transcript retention is distinct from the ephemeral transcript displayed in the app.
+
 ## Intended flow
 
 ```text

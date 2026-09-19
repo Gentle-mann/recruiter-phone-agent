@@ -16,6 +16,7 @@ const navigation = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/roles/new", label: "Role setup", icon: BriefcaseBusiness },
   { href: "/candidate", label: "Candidate preview", icon: Phone },
+  { href: "/agent", label: "Talk to agent", icon: Phone },
   { href: "/integrations", label: "Integrations", icon: Plug },
 ];
 
@@ -84,13 +85,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
           <span className="demo-badge">
             <span />
-            Demo mode
+            {pathname === "/agent" ? "Live practice" : "Demo workspace"}
           </span>
         </header>
         <main id="main">{children}</main>
         <footer className="footer">
-          Fictional sample data · Session changes reset on refresh · No real
-          calls
+          Fictional roles · Session changes reset on refresh · Browser
+          conversations use ElevenLabs
         </footer>
       </div>
     </div>
