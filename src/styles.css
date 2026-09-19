@@ -266,7 +266,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .drawer { width: 640px; }
 .d-top { padding: 12px 20px; }
 .d-top .btns { gap: 6px; }
-.btn.danger:hover { color: #9a3b2e; border-color: #e5c9c3; background: #fbf3f1; }
+.btn.danger { color: #b3261e; border-color: #ecc5c1; }
+.btn.danger:hover { background: #fbf1f0; border-color: #d9958e; }
 .d-body { padding: 0 0 48px; }
 .d-head { padding: 22px 24px 0; }
 .d-head p { margin: 4px 0 0; }

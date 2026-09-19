@@ -11,7 +11,6 @@ const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" strok
 export function Drawer({ id, role, onClose }: { id: string | null; role: Role | null; onClose: () => void }) {
   const { data } = useData();
   const c = data.useCandidate(id);
-  const setTaken = (a: { id: string; taken: boolean }) => data.setTaken(a.id, a.taken);
   const advance = (a: { id: string }) => data.advance(a.id);
   const reject = (a: { id: string }) => data.reject(a.id);
   const addNote = (a: { id: string; text: string }) => data.addNote(a.id, a.text);
@@ -45,8 +44,7 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
 
   // ---- next step ----
   let next: React.ReactNode, nextBtns: React.ReactNode = null, nextClass = `s${i}`;
-  if (c.taken) { next = <><b>You own this candidate.</b> {role.agent} won't contact {first} again.</>; nextBtns = <><button className="btn primary">Call now</button><button className="btn">Schedule</button></>; nextClass = "you"; }
-  else if (i === 0) next = <><b>{role.agent} is reading the application.</b> Usually done within the hour.</>;
+  if (i === 0) next = <><b>{role.agent} is reading the application.</b> Usually done within the hour.</>;
   else if (i === 1) next = <><b>Next: socials check.</b> Application scored {c.app}, above the bar.</>;
   else if (i === 2) { next = <><b>Next: {role.agent} calls today at 14:00 {first}'s time.</b> A summary lands here within minutes of the call.</>; nextBtns = <button className="btn">Reschedule</button>; }
   else if (i === 3 && c.live) { next = <><b>{role.agent} is on the phone with {first} now.</b> {fmtDur(liveDur(c, now))} so far.</>; nextBtns = <button className="btn">Listen in</button>; nextClass += " live"; }
@@ -102,9 +100,8 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
       <div className="d-top">
         <button className="icon-btn" onClick={onClose} aria-label="Close"><Ico d='<path d="M4 4l8 8M12 4l-8 8"/>' /></button>
         <div className="btns">
-          <button className="btn" onClick={() => setTaken({ id: c._id, taken: !c.taken })}>{c.taken ? `Give back to ${role.agent}` : "Take over"}</button>
           <button className="btn danger" onClick={() => { reject({ id: c._id }); onClose(); }}>Reject</button>
-          <button className="btn primary" onClick={() => { if (i < 4) advance({ id: c._id }); }}>{has(4) ? (low ? "Advance anyway" : "Book interview") : "Advance"}</button>
+          <button className="btn primary" onClick={() => { if (i < 4) advance({ id: c._id }); }}>{has(4) ? "Book interview" : "Advance"}</button>
           <button className="icon-btn" aria-label="More"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.3" /><circle cx="8" cy="8" r="1.3" /><circle cx="13" cy="8" r="1.3" /></svg></button>
         </div>
       </div>

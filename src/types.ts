@@ -25,7 +25,6 @@ export interface DataApi {
   useCandidate(id: string | null): CandidateFull | null | undefined;
   advance(id: string): Promise<void>;
   reject(id: string): Promise<void>;
-  setTaken(id: string, taken: boolean): Promise<void>;
   addNote(id: string, text: string): Promise<void>;
   createRole(r: NewRole): Promise<string>;
 }

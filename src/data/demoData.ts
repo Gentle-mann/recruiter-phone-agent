@@ -134,12 +134,6 @@ class DemoStore {
     this.notes = this.notes.filter((n) => n.candidateId !== id);
     this.emit();
   }
-  setTaken(id: string, taken: boolean) {
-    const c = this.cands.find((x) => x._id === id); if (!c) return;
-    c.taken = taken; if (taken) c.live = false;
-    this.event(id, taken ? "<b>You</b> took over" : "<b>You</b> handed back to the agent", Date.now(), true);
-    this.emit();
-  }
   addNote(id: string, text: string) {
     if (!text.trim()) return;
     this.notes.push({ _id: this.id("n"), candidateId: id, text: text.trim(), at: Date.now() });
@@ -164,7 +158,6 @@ export function useDemoData(): DataApi {
     useCandidate: (id) => useSyncExternalStore(store.subscribe, () => (id ? store.getCandidate(id) : null)),
     advance: async (id) => store.advance(id),
     reject: async (id) => store.reject(id),
-    setTaken: async (id, taken) => store.setTaken(id, taken),
     addNote: async (id, text) => store.addNote(id, text),
     createRole: async (r) => store.createRole(r),
   }), []);

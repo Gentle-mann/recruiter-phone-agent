@@ -8,7 +8,6 @@ import type { DataApi } from "../types";
 export function useConvexData(): DataApi {
   const advance = useMutation(api.candidates.advance);
   const reject = useMutation(api.candidates.reject);
-  const setTaken = useMutation(api.candidates.setTaken);
   const addNote = useMutation(api.candidates.addNote);
   const create = useMutation(api.roles.create);
 
@@ -19,8 +18,7 @@ export function useConvexData(): DataApi {
     useCandidate: (id) => useQuery(api.candidates.get, id ? { id: id as Id<"candidates"> } : "skip"),
     advance: (id) => advance({ id: id as Id<"candidates"> }).then(() => {}),
     reject: (id) => reject({ id: id as Id<"candidates"> }).then(() => {}),
-    setTaken: (id, taken) => setTaken({ id: id as Id<"candidates">, taken }).then(() => {}),
     addNote: (id, text) => addNote({ id: id as Id<"candidates">, text }).then(() => {}),
     createRole: async (r) => create(r),
-  }), [advance, reject, setTaken, addNote, create]);
+  }), [advance, reject, addNote, create]);
 }
