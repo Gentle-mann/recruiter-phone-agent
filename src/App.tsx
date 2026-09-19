@@ -5,6 +5,7 @@ import { CreateRole } from "./CreateRole";
 import { DataContext, useData } from "./data";
 import { ModeSwitch } from "./ModeSwitch";
 import { Logo } from "./icons";
+import { Apply } from "./Apply";
 import { useConvexData } from "./data/convexData";
 import { useDemoData } from "./data/demoData";
 import type { DataApi, Mode } from "./types";
@@ -12,6 +13,12 @@ import type { DataApi, Mode } from "./types";
 const MODE_KEY = "callscreen.mode";
 
 export default function App() {
+  const m = location.pathname.match(/^\/apply\/([^/]+)\/?$/);
+  if (m) return <Apply slug={decodeURIComponent(m[1])} />;
+  return <Admin />;
+}
+
+function Admin() {
   const [mode, setMode] = useState<Mode>(() => (localStorage.getItem(MODE_KEY) === "demo" ? "demo" : "live"));
   useEffect(() => { localStorage.setItem(MODE_KEY, mode); }, [mode]);
   // Keyed on mode so switching remounts the tree with a fresh data source.

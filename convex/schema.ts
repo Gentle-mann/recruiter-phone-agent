@@ -44,6 +44,15 @@ export default defineSchema({
     socialsFound: v.array(v.boolean()),
     noteIdx: v.number(),
     taken: v.boolean(),
+    // Filled in when the candidate applied through the public form.
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    linkedin: v.optional(v.string()),
+    website: v.optional(v.string()),
+    resumeId: v.optional(v.id("_storage")),
+    authorized: v.optional(v.boolean()),
+    startDate: v.optional(v.string()),
+    note: v.optional(v.string()),
   })
     .index("by_role", ["roleId"])
     .index("by_role_stage", ["roleId", "stage"]),

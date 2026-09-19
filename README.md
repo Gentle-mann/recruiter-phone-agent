@@ -17,6 +17,10 @@ npm start          # http://localhost:5180, opens the browser
 
 The frontend runs locally and talks to the production Convex deployment. `VITE_CONVEX_URL` lives in `.env`. There is no dev deployment and no hosted frontend.
 
+## Application page
+
+Every role has a public application form at `/apply/<slug>`, for example `/apply/backend-engineer`. The link sits under the role title on the board with Copy and Open buttons. Submissions create a candidate in the Applied stage on the live backend, with the résumé stored in Convex file storage. The page always talks to production, whatever mode the admin is in.
+
 ## Demo and Live
 
 The switch at the top right of the board picks the data source.

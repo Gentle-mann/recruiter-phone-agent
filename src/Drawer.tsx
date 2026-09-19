@@ -37,7 +37,9 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
   const low = c.final < role.threshold;
   const first = c.name.split(" ")[0];
   const title = ct.titles[hash(c._id) % ct.titles.length];
-  const email = c.name.toLowerCase().replace(/[^a-z ]/g, "").replace(" ", ".") + "@gmail.com";
+  const email = c.email ?? c.name.toLowerCase().replace(/[^a-z ]/g, "").replace(" ", ".") + "@gmail.com";
+  const phone = c.phone || `+351 91 ${200 + hash(c._id) % 700} ${100 + hash(c._id) % 900}`;
+  const fromForm = c.source === "Careers page" && !c.company;
   const tz = TZ[c.loc] ?? "GMT";
   const agoMs = now - c.appliedAt;
   const P = (k: number) => pr(c._id, k);
@@ -108,12 +110,14 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
       <div className="d-body" ref={body} onScroll={onScroll}>
         <div className="d-head">
           <span className={`av big s${i}`}>{initials(c.name)}</span>
-          <div><h2>{c.name}</h2><p>{title} at {c.company} · {c.loc}, {tz} · applied {fmtAgo(agoMs)} ago via {c.source}</p></div>
+          <div><h2>{c.name}</h2><p>{fromForm ? "" : `${title} at ${c.company} · `}{c.loc}, {tz} · applied {fmtAgo(agoMs)} ago via {c.source.toLowerCase()}</p></div>
         </div>
         <div className="links">
-          <a href="#"><ResumeIcon />Résumé</a><a href="#"><LinkedInIcon />LinkedIn</a>
-          {c.socialsFound[0] && ct.social[0][0] !== "in" && <a href="#"><SocialIcon k={ct.social[0][0]} />{ct.social[0][1]}</a>}
-          <a href="#"><MailIcon />{email}</a><a href="#"><PhoneIcon />+351 91 {200 + hash(c._id) % 700} {100 + hash(c._id) % 900}</a>
+          {(!fromForm || c.resumeUrl) && <a href={c.resumeUrl ?? "#"} target={c.resumeUrl ? "_blank" : undefined} rel="noreferrer"><ResumeIcon />Résumé</a>}
+          {(!fromForm || c.linkedin) && <a href={c.linkedin ?? "#"} target={c.linkedin ? "_blank" : undefined} rel="noreferrer"><LinkedInIcon />LinkedIn</a>}
+          {fromForm ? (c.website && <a href={c.website} target="_blank" rel="noreferrer"><SocialIcon k={/github\.com/.test(c.website) ? "gh" : "web"} />{/github\.com/.test(c.website) ? "GitHub" : "Website"}</a>)
+            : (c.socialsFound[0] && ct.social[0][0] !== "in" && <a href="#"><SocialIcon k={ct.social[0][0]} />{ct.social[0][1]}</a>)}
+          <a href={`mailto:${email}`}><MailIcon />{email}</a>{phone && <a href={`tel:${phone}`}><PhoneIcon />{phone}</a>}
         </div>
         <div className={`next ${nextClass}`}><span className="dot" /><span className="t">{next}</span><span className="btns">{nextBtns}</span></div>
 
@@ -137,6 +141,16 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
             </div>
           )}
           {flags.length > 0 && <div className="flags">{flags.map((f) => <span key={f[0]} className={`flag ${f[1]}`}>{f[0]}</span>)}</div>}
+          {fromForm && (
+            <>
+              <h2>From the application</h2>
+              <div className="kv">
+                <div><small>Work authorization</small><span className={c.authorized === false ? "warn" : ""}>{c.authorized ? "Yes, no sponsorship needed" : "Needs sponsorship"}</span></div>
+                <div><small>Earliest start</small><span>{c.startDate || "–"}</span></div>
+                {c.note && <div style={{ gridColumn: "1 / -1" }}><small>In their words</small><span>{c.note}</span></div>}
+              </div>
+            </>
+          )}
           <h2>Must-haves</h2>
           {rubric}
           <h2>Logistics</h2>

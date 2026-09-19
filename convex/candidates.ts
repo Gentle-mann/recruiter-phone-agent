@@ -15,7 +15,8 @@ export const get = query({
     if (!c) return null;
     const events = await ctx.db.query("events").withIndex("by_candidate", (q) => q.eq("candidateId", id)).collect();
     const notes = await ctx.db.query("notes").withIndex("by_candidate", (q) => q.eq("candidateId", id)).collect();
-    return { ...c, events: events.sort((a, b) => b.at - a.at), notes };
+    const resumeUrl = c.resumeId ? await ctx.storage.getUrl(c.resumeId) : null;
+    return { ...c, events: events.sort((a, b) => b.at - a.at), notes, resumeUrl };
   },
 });
 

@@ -16,6 +16,7 @@ const SEED_ROLES = [
   { name: "Account Executive", team: "Sales", openedDaysAgo: 19, threshold: 65, agent: "Adrian", contentKey: "ae" },
 ];
 const DIST: Record<Stage, number> = { applied: 6, application: 5, socials: 4, call: 3, scored: 9 };
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const dur = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 class DemoStore {
@@ -59,7 +60,7 @@ class DemoStore {
     let seed = 1234;
     for (const r of SEED_ROLES) {
       const roleId = this.id("r");
-      this.roles.push({ _id: roleId, name: r.name, team: r.team, openedAt: now - r.openedDaysAgo * 86_400_000, threshold: r.threshold, agent: r.agent, contentKey: r.contentKey });
+      this.roles.push({ _id: roleId, slug: slugify(r.name), name: r.name, team: r.team, openedAt: now - r.openedDaysAgo * 86_400_000, threshold: r.threshold, agent: r.agent, contentKey: r.contentKey });
       const rand = rng(seed); seed += 97;
       const names = NAMES.slice().sort(() => rand() - .5);
       let i = 0;
@@ -141,7 +142,7 @@ class DemoStore {
   }
   createRole(r: NewRole) {
     const _id = this.id("r");
-    this.roles.push({ _id, name: r.name, team: r.team, openedAt: Date.now(), threshold: r.threshold, agent: r.agent, contentKey: r.contentKey });
+    this.roles.push({ _id, slug: slugify(r.name), name: r.name, team: r.team, openedAt: Date.now(), threshold: r.threshold, agent: r.agent, contentKey: r.contentKey });
     this.emit();
     return _id;
   }

@@ -3,7 +3,7 @@ import type { Stage } from "./content";
 export type Mode = "demo" | "live";
 
 export type Role = {
-  _id: string; name: string; team: string; openedAt: number; threshold: number;
+  _id: string; slug: string; name: string; team: string; openedAt: number; threshold: number;
   agent: string; contentKey: string; inProgress: number; total: number;
 };
 export type Candidate = {
@@ -11,10 +11,11 @@ export type Candidate = {
   app: number; soc: number; call: number; final: number; live: boolean; callStartedAt?: number; callDur: number;
   yrs: number; company: string; area: string; stack: string; repos: number; stars: number;
   socialsFound: boolean[]; noteIdx: number; taken: boolean;
+  email?: string; phone?: string; linkedin?: string; website?: string; authorized?: boolean; startDate?: string; note?: string;
 };
 export type Event = { _id: string; text: string; at: number; byRecruiter: boolean };
 export type Note = { _id: string; text: string; at: number };
-export type CandidateFull = Candidate & { events: Event[]; notes: Note[] };
+export type CandidateFull = Candidate & { events: Event[]; notes: Note[]; resumeUrl?: string | null };
 export type NewRole = { name: string; team: string; threshold: number; agent: string; contentKey: string };
 
 /** Everything the UI needs from a backend. Implemented by Convex (live) and an in-memory store (demo). */

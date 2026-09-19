@@ -4,6 +4,7 @@ import { useNow } from "./useNow";
 import { useData } from "./data";
 import { ModeSwitch } from "./ModeSwitch";
 import { SocialIcon } from "./icons";
+import { ApplyLink } from "./ApplyLink";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -77,6 +78,7 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
         <div>
           <h1>{role.name}</h1>
           <p className="sub">{role.team} · opened {openedAgo.replace(/d$/, " days")} ago · {cands?.length ?? 0} applications</p>
+          <ApplyLink slug={role.slug} />
         </div>
         <div className="top-actions">
           <span className="live-pill"><span className="dot" /><span>{live === 1 ? "1 call in progress" : `${live} calls in progress`}</span></span>
