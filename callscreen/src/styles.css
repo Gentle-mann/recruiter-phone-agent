@@ -394,6 +394,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .apply-lead { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 0 0 28px; max-width: 48ch; }
 .apply-muted { color: var(--ink-3); font-size: 12px; margin: 0; }
 .apply .field input, .apply .field select { height: 36px; }
+.apply .row2 .field > :last-child { margin-top: auto; }
 .upload { display: flex; align-items: center; height: 36px; padding: 0 10px; border: 1px dashed var(--line); border-radius: 6px; color: var(--ink-3); cursor: pointer; }
 .upload:hover { border-color: var(--ink-3); color: var(--ink-2); }
 .upload.has { border-style: solid; color: var(--ink); }

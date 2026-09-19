@@ -91,8 +91,8 @@ export function Apply({ slug }: { slug: string }) {
               </label>
             </div>
             <div className="row2">
-              <div className="field"><label>Legally able to work in the EU without sponsorship?</label>
-                <select value={f.authorized} onChange={set("authorized")} required><option value="">Choose one</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+              <div className="field"><label>EU work authorization</label>
+                <select value={f.authorized} onChange={set("authorized")} required><option value="">Choose one</option><option value="yes">Yes, no sponsorship needed</option><option value="no">No, I'd need sponsorship</option></select></div>
               <div className="field"><label>Earliest start date</label><input type="text" value={f.startDate} onChange={set("startDate")} placeholder="e.g. 1 November, or 2 months notice" required /></div>
             </div>
             <div className="field"><label>Anything you want us to know</label><textarea rows={3} value={f.note} onChange={set("note")} placeholder="Optional" /></div>
