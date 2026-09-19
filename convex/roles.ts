@@ -21,8 +21,3 @@ export const create = mutation({
     return await ctx.db.insert("roles", { ...a, slug, openedAt: Date.now(), paused: false });
   },
 });
-
-export const setPaused = mutation({
-  args: { roleId: v.id("roles"), paused: v.boolean() },
-  handler: async (ctx, { roleId, paused }) => { await ctx.db.patch(roleId, { paused }); },
-});

@@ -1,24 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import type { Doc, Id } from "../convex/_generated/dataModel";
+import { useData } from "./data";
+import type { Role } from "./types";
 import { CONTENT, STAGES, TZ, fill, fmtAgo, fmtDur, hash, initials, pr } from "./content";
 import { Wave, liveDur } from "./Board";
 import { useNow } from "./useNow";
-
-type Role = Doc<"roles">;
 
 const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" dangerouslySetInnerHTML={{ __html: d }} />;
 const I_LINK = '<path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 013.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 014.5 9l1-1"/>';
 const I_MAIL = '<rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 5l6 4 6-4"/>';
 const I_PHONE = '<path d="M4 2.5h2.5l1 3-1.5 1a7 7 0 003.5 3.5l1-1.5 3 1V12a1.5 1.5 0 01-1.5 1.5A10 10 0 012.5 4 1.5 1.5 0 014 2.5z"/>';
 
-export function Drawer({ id, role, onClose }: { id: Id<"candidates"> | null; role: Role | null; onClose: () => void }) {
-  const c = useQuery(api.candidates.get, id ? { id } : "skip");
-  const setTaken = useMutation(api.candidates.setTaken);
-  const advance = useMutation(api.candidates.advance);
-  const reject = useMutation(api.candidates.reject);
-  const addNote = useMutation(api.candidates.addNote);
+export function Drawer({ id, role, onClose }: { id: string | null; role: Role | null; onClose: () => void }) {
+  const { data } = useData();
+  const c = data.useCandidate(id);
+  const setTaken = (a: { id: string; taken: boolean }) => data.setTaken(a.id, a.taken);
+  const advance = (a: { id: string }) => data.advance(a.id);
+  const reject = (a: { id: string }) => data.reject(a.id);
+  const addNote = (a: { id: string; text: string }) => data.addNote(a.id, a.text);
   const now = useNow();
   const body = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState("p-overview");

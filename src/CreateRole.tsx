@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../convex/_generated/api";
-import type { Id } from "../convex/_generated/dataModel";
 import { Wave } from "./Board";
+import { useData } from "./data";
 
 function Switch({ on: init, disabled }: { on: boolean; disabled?: boolean }) {
   const [on, setOn] = useState(init);
@@ -37,8 +35,9 @@ function QList({ init, addLabel = "+ Add" }: { init: [string, string][]; addLabe
 }
 const SelectSm = ({ opts }: { opts: string[] }) => <select style={{ height: 28, border: "1px solid var(--line)", borderRadius: 6, padding: "0 8px" }}>{opts.map((o) => <option key={o}>{o}</option>)}</select>;
 
-export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCreated: (id: Id<"roles">) => void }) {
-  const create = useMutation(api.roles.create);
+export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCreated: (id: string) => void }) {
+  const { data } = useData();
+  const create = data.createRole;
   const [title, setTitle] = useState("Product Designer");
   const [team, setTeam] = useState("Design");
   const [agent, setAgent] = useState("June");

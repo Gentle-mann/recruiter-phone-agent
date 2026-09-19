@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import type { Doc, Id } from "../convex/_generated/dataModel";
 import { CONTENT, STAGES, STAGE_LABEL, fmtAgo, fmtDur, initials, type Stage } from "./content";
 import { useNow } from "./useNow";
-
-type Role = Doc<"roles"> & { inProgress: number; total: number };
-type Cand = Doc<"candidates">;
+import { useData } from "./data";
+import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
   const a = (Math.min(99.9, v) / 100) * 2 * Math.PI, R = 8;
@@ -46,19 +42,11 @@ function cardMeta(c: Cand, role: Role, now: number) {
   return c.taken ? "You took over" : `Called ${fmtAgo(now - c.appliedAt)} ago · ${fmtDur(c.callDur)}`;
 }
 
-export function Board({ role, onOpen }: { role: Role; onOpen: (id: Id<"candidates">) => void }) {
-  const cands = useQuery(api.candidates.listByRole, { roleId: role._id });
-  const tick = useMutation(api.sim.tick);
-  const setPaused = useMutation(api.roles.setPaused);
+export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => void }) {
+  const { data, mode, setMode } = useData();
+  const cands = data.useCandidates(role._id);
   const now = useNow();
   const [q, setQ] = useState("");
-
-  // Demo simulation runs only while this board is open.
-  useEffect(() => {
-    const a = setInterval(() => tick({ roleId: role._id, add: false }), 4200);
-    const b = setInterval(() => tick({ roleId: role._id, add: true }), 7600);
-    return () => { clearInterval(a); clearInterval(b); };
-  }, [role._id, tick]);
 
   // Track stage changes so moved cards get an entrance animation.
   const prev = useRef(new Map<string, Stage>());
@@ -94,7 +82,11 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: Id<"candidate
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
             <input placeholder="Find a candidate" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
-          <button className="btn" onClick={() => setPaused({ roleId: role._id, paused: !role.paused })}>{role.paused ? "Resume agent" : "Pause agent"}</button>
+          {mode === "demo" && <span className="mode-hint">Demo data, nothing is saved</span>}
+          <div className="mode" role="group" aria-label="Data mode">
+            <button className={mode === "demo" ? "on" : ""} onClick={() => setMode("demo")}>Demo</button>
+            <button className={mode === "live" ? "on" : ""} onClick={() => setMode("live")}>Live</button>
+          </div>
         </div>
       </header>
       <div className="board">

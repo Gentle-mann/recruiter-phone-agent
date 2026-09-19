@@ -12,7 +12,6 @@ import type * as candidates from "../candidates.js";
 import type * as content from "../content.js";
 import type * as roles from "../roles.js";
 import type * as seed from "../seed.js";
-import type * as sim from "../sim.js";
 
 import type {
   ApiFromModules,
@@ -25,7 +24,6 @@ declare const fullApi: ApiFromModules<{
   content: typeof content;
   roles: typeof roles;
   seed: typeof seed;
-  sim: typeof sim;
 }>;
 
 /**

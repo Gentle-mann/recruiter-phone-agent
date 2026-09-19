@@ -1,19 +1,42 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import type { Id } from "../convex/_generated/dataModel";
 import { Board } from "./Board";
 import { Drawer } from "./Drawer";
 import { CreateRole } from "./CreateRole";
+import { DataContext, useData } from "./data";
+import { useConvexData } from "./data/convexData";
+import { useDemoData } from "./data/demoData";
+import type { DataApi, Mode } from "./types";
+
+const MODE_KEY = "callscreen.mode";
 
 export default function App() {
-  const roles = useQuery(api.roles.list);
-  const [roleId, setRoleId] = useState<Id<"roles"> | null>(null);
+  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem(MODE_KEY) === "demo" ? "demo" : "live"));
+  useEffect(() => { localStorage.setItem(MODE_KEY, mode); }, [mode]);
+  // Keyed on mode so switching remounts the tree with a fresh data source.
+  return mode === "demo" ? <DemoShell key="demo" setMode={setMode} /> : <LiveShell key="live" setMode={setMode} />;
+}
+
+function DemoShell({ setMode }: { setMode: (m: Mode) => void }) {
+  const data = useDemoData();
+  return <Provider data={data} setMode={setMode} />;
+}
+function LiveShell({ setMode }: { setMode: (m: Mode) => void }) {
+  const data = useConvexData();
+  return <Provider data={data} setMode={setMode} />;
+}
+function Provider({ data, setMode }: { data: DataApi; setMode: (m: Mode) => void }) {
+  return <DataContext.Provider value={{ data, mode: data.mode, setMode }}><Shell /></DataContext.Provider>;
+}
+
+function Shell() {
+  const { data } = useData();
+  const roles = data.useRoles();
+  const [roleId, setRoleId] = useState<string | null>(null);
   const [view, setView] = useState<"pipeline" | "create">("pipeline");
-  const [openId, setOpenId] = useState<Id<"candidates"> | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!roleId && roles && roles.length) setRoleId(roles[0]._id);
+    if (roles && roles.length && (!roleId || !roles.some((r) => r._id === roleId))) setRoleId(roles[0]._id);
   }, [roles, roleId]);
 
   useEffect(() => {
@@ -36,6 +59,7 @@ export default function App() {
               <span>{r.name}</span><span className="n">{r.inProgress}</span>
             </button>
           ))}
+          {roles && roles.length === 0 && <div className="empty" style={{ padding: "6px 8px" }}>No roles yet</div>}
         </nav>
         <button className="role new" onClick={() => setView("create")}>
           <span>
@@ -47,7 +71,7 @@ export default function App() {
       </aside>
 
       <main>
-        {view === "pipeline" && (role ? <Board role={role} onOpen={setOpenId} /> : <div className="loading">Loading roles…</div>)}
+        {view === "pipeline" && (role ? <Board role={role} onOpen={setOpenId} /> : <div className="loading">{roles ? "Create a role to start screening." : "Loading…"}</div>)}
         {view === "create" && (
           <CreateRole onCancel={() => setView("pipeline")} onCreated={(id) => { setRoleId(id); setView("pipeline"); }} />
         )}
