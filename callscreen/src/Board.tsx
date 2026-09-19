@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { CONTENT, STAGES, STAGE_LABEL, fmtAgo, fmtDur, initials, type Stage } from "./content";
 import { useNow } from "./useNow";
 import { useData } from "./data";
-import { ModeSwitch } from "./ModeSwitch";
 import { SocialIcon } from "./icons";
 import { ApplyLink } from "./ApplyLink";
 import type { Candidate as Cand, Role } from "./types";
@@ -58,7 +57,6 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
   useEffect(() => { prev.current = new Map((cands ?? []).map((c) => [c._id, c.stage])); });
 
   const list = (cands ?? []).filter((c) => !q || c.name.toLowerCase().includes(q.toLowerCase()));
-  const live = (cands ?? []).filter((c) => c.stage === "call" && c.live).length;
   const openedAgo = fmtAgo(now - role.openedAt);
 
   const Card = ({ c }: { c: Cand }) => {
@@ -78,15 +76,13 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
         <div>
           <h1>{role.name}</h1>
           <p className="sub">{role.team} · opened {openedAgo.replace(/d$/, " days")} ago · {cands?.length ?? 0} applications</p>
-          <ApplyLink slug={role.slug} />
         </div>
         <div className="top-actions">
-          <span className="live-pill"><span className="dot" /><span>{live === 1 ? "1 call in progress" : `${live} calls in progress`}</span></span>
           <label className="search">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
             <input placeholder="Find a candidate" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
-          <ModeSwitch />
+          <ApplyLink slug={role.slug} />
         </div>
       </header>
       <div className="board">

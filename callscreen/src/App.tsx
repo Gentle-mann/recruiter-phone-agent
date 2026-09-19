@@ -76,7 +76,7 @@ function Shell() {
             New role
           </span>
         </button>
-        <div className="side-foot"><a href="#">Settings</a></div>
+        <div className="side-foot"><ModeSwitch /><a href="#">Settings</a></div>
       </aside>
 
       <main>
@@ -84,7 +84,6 @@ function Shell() {
           <section className="view active">
             <header className="top">
               <div><h1>{roles ? "No roles yet" : "Loading…"}</h1>{roles && <p className="sub">Create a role and the agent starts screening as applications come in.</p>}</div>
-              <div className="top-actions"><ModeSwitch /></div>
             </header>
             {roles && (
               <div className="empty-main">
