@@ -3,3 +3,4 @@ dist
 .env.local
 .context
 tsconfig.tsbuildinfo
+.vercel
