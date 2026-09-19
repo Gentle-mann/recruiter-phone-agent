@@ -1,11 +1,3 @@
-node_modules/
-.next/
-out/
-coverage/
-.env*
-!.env.example
-*.tsbuildinfo
-next-env.d.ts
+node_modules
 .DS_Store
-.vercel/
-*.log
+.context
