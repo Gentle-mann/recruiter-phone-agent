@@ -41,3 +41,15 @@ export const run = internalMutation({
     return "seeded";
   },
 });
+
+/** Deletes everything. Run `seed:run` afterwards to get the sample roles back. */
+export const clear = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let n = 0;
+    for (const table of ["notes", "events", "candidates", "roles"] as const) {
+      for (const doc of await ctx.db.query(table).collect()) { await ctx.db.delete(doc._id); n++; }
+    }
+    return `deleted ${n} documents`;
+  },
+});

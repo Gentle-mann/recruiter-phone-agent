@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "deploy": "convex deploy -y",
     "seed": "convex run seed:run --prod",
-    "shot": "node scripts/shot.mjs"
+    "shot": "node scripts/shot.mjs",
+    "reset": "convex run seed:clear --prod && convex run seed:run --prod"
   },
   "dependencies": {
     "convex": "^1.46.0",

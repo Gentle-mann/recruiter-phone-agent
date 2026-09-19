@@ -31,6 +31,7 @@ The data layer lives in `src/data/`: `convexData.ts` for live, `demoData.ts` for
 ```
 npm run deploy     # push convex/ to production
 npm run seed       # seed three sample roles into production (no-op if roles exist)
+npm run reset      # wipe production and reseed the sample roles
 ```
 
 ## Screenshots
