@@ -12,10 +12,10 @@ Recruiter phone agent dashboard. Candidates apply, the agent screens the applica
 
 ```
 npm install
-npm run dev        # frontend, talks to the production Convex deployment
+npm start          # http://localhost:5180, opens the browser
 ```
 
-`VITE_CONVEX_URL` lives in `.env` and points at production. There is no dev deployment.
+The frontend runs locally and talks to the production Convex deployment. `VITE_CONVEX_URL` lives in `.env`. There is no dev deployment and no hosted frontend.
 
 ## Backend changes
 
