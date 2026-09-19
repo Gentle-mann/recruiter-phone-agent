@@ -388,6 +388,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .apply { max-width: 560px; margin: 0 auto; padding: 48px 24px 80px; }
 .apply-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; margin-bottom: 40px; }
 .apply-brand svg { width: 18px; height: 18px; }
+.prefill { margin-left: auto; color: var(--ink-3); font-size: 12px; font-weight: 400; }
+.prefill:hover { color: var(--ink); }
 .apply h1 { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 8px; }
 .apply-lead { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 0 0 28px; max-width: 48ch; }
 .apply-muted { color: var(--ink-3); font-size: 12px; margin: 0; }

@@ -4,6 +4,16 @@ import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import { Logo } from "./icons";
 
+// Sample applicants for the Prefill button, so demos don't start with an empty form.
+const SAMPLES = [
+  { name: "Inês Carvalho", email: "ines.carvalho@proton.me", phone: "+351 91 555 0142", loc: "Porto", linkedin: "https://linkedin.com/in/inescarvalho", website: "https://github.com/inescarvalho", authorized: "yes", startDate: "2 months notice", note: "Currently at a fintech in Porto, mostly Go and Postgres. Happy to do the call after 17:00." },
+  { name: "Tomasz Nowak", email: "tomasz.nowak@gmail.com", phone: "+48 512 338 904", loc: "Warsaw", linkedin: "https://linkedin.com/in/tnowak", website: "https://github.com/tnowak", authorized: "yes", startDate: "1 November", note: "Six years on event pipelines at Allegro. Looking for a smaller team where I own more of the stack." },
+  { name: "Amara Diallo", email: "amara.diallo@hey.com", phone: "+33 6 12 44 90 71", loc: "Paris", linkedin: "https://linkedin.com/in/amaradiallo", website: "https://amaradiallo.dev", authorized: "yes", startDate: "Immediately", note: "Just wrapped a contract at Doctolib. Please text before calling, I'm often in meetings before noon." },
+  { name: "Lukas Brandt", email: "lukas.brandt@posteo.de", phone: "+49 176 5522 0187", loc: "Berlin", linkedin: "https://linkedin.com/in/lukasbrandt", website: "https://github.com/lbrandt", authorized: "yes", startDate: "3 months notice", note: "Staff engineer at a Series B, mostly Rust and gRPC. Interested in the voice side of what you're building." },
+  { name: "Priya Raman", email: "priya.raman@outlook.com", phone: "+44 7700 900412", loc: "London", linkedin: "https://linkedin.com/in/priyaraman", website: "https://github.com/praman", authorized: "no", startDate: "1 December", note: "Would need visa sponsorship for the EU but can work from London in the meantime." },
+];
+const samplePdf = (name: string) => new File([`%PDF-1.4\n% Résumé for ${name}\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n`], `${name.replace(/\s+/g, "-")}-CV.pdf`, { type: "application/pdf" });
+
 /** Public application page, served at /apply/<slug>. Always talks to the live backend. */
 export function Apply({ slug }: { slug: string }) {
   const role = useQuery(api.roles.bySlug, { slug });
@@ -13,6 +23,10 @@ export function Apply({ slug }: { slug: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [err, setErr] = useState("");
+  const prefill = () => {
+    const s = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
+    setF(s); setFile(samplePdf(s.name)); setErr("");
+  };
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -37,7 +51,7 @@ export function Apply({ slug }: { slug: string }) {
 
   return (
     <div className="apply">
-      <div className="apply-brand"><Logo />Callscreen</div>
+      <div className="apply-brand"><Logo />Callscreen{role && state !== "done" && <button className="prefill" onClick={prefill} type="button">Prefill sample</button>}</div>
       {role === undefined && <p className="apply-muted">Loading…</p>}
       {role === null && (
         <>
