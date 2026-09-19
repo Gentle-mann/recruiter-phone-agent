@@ -10,7 +10,7 @@ const SAMPLES = [
   { name: "Tomasz Nowak", email: "tomasz.nowak@gmail.com", phone: "+48 512 338 904", loc: "Warsaw", linkedin: "https://linkedin.com/in/tnowak", website: "https://github.com/tnowak", authorized: "yes", startDate: "1 November", note: "Six years on event pipelines at Allegro. Looking for a smaller team where I own more of the stack." },
   { name: "Amara Diallo", email: "amara.diallo@hey.com", phone: "+33 6 12 44 90 71", loc: "Paris", linkedin: "https://linkedin.com/in/amaradiallo", website: "https://amaradiallo.dev", authorized: "yes", startDate: "Immediately", note: "Just wrapped a contract at Doctolib. Please text before calling, I'm often in meetings before noon." },
   { name: "Lukas Brandt", email: "lukas.brandt@posteo.de", phone: "+49 176 5522 0187", loc: "Berlin", linkedin: "https://linkedin.com/in/lukasbrandt", website: "https://github.com/lbrandt", authorized: "yes", startDate: "3 months notice", note: "Staff engineer at a Series B, mostly Rust and gRPC. Interested in the voice side of what you're building." },
-  { name: "Priya Raman", email: "priya.raman@outlook.com", phone: "+44 7700 900412", loc: "London", linkedin: "https://linkedin.com/in/priyaraman", website: "https://github.com/praman", authorized: "no", startDate: "1 December", note: "Would need visa sponsorship for the EU but can work from London in the meantime." },
+  { name: "Priya Raman", email: "priya.raman@outlook.com", phone: "+44 7700 900412", loc: "London", linkedin: "https://linkedin.com/in/priyaraman", website: "https://github.com/praman", authorized: "no", startDate: "1 December", note: "Would need visa sponsorship for the US but can start remotely from London in the meantime." },
 ];
 const samplePdf = (name: string) => new File([`%PDF-1.4\n% Résumé for ${name}\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n`], `${name.replace(/\s+/g, "-")}-CV.pdf`, { type: "application/pdf" });
 
@@ -91,8 +91,8 @@ export function Apply({ slug }: { slug: string }) {
               </label>
             </div>
             <div className="row2">
-              <div className="field"><label>EU work authorization</label>
-                <select value={f.authorized} onChange={set("authorized")} required><option value="">Choose one</option><option value="yes">Yes, no sponsorship needed</option><option value="no">No, I'd need sponsorship</option></select></div>
+              <div className="field"><label>US work authorization</label>
+                <select value={f.authorized} onChange={set("authorized")} required><option value="">Choose one</option><option value="yes">Yes, authorized to work in the US</option><option value="no">No, I'd need sponsorship</option></select></div>
               <div className="field"><label>Earliest start date</label><input type="text" value={f.startDate} onChange={set("startDate")} placeholder="e.g. 1 November, or 2 months notice" required /></div>
             </div>
             <div className="field"><label>Anything you want us to know</label><textarea rows={3} value={f.note} onChange={set("note")} placeholder="Optional" /></div>

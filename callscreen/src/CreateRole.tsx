@@ -89,7 +89,7 @@ export function CreateRole({ onCancel, onCreated }: { onCancel: () => void; onCr
           <div className="step"><div className="num">2</div><div>
             <h2>Application screen</h2><p className="help">{agent} reads the résumé and the form answers. Knockouts reject on the spot, must-haves are scored, nice-to-haves break ties.</p>
             <div className="field"><label>Knockout questions</label>
-              <QList addLabel="+ Add knockout" init={[["Are you legally able to work in the EU without sponsorship?", "Must answer: Yes"], ["Can you start within 3 months?", "Must answer: Yes"], ["Link to your portfolio", "Must be provided"]]} />
+              <QList addLabel="+ Add knockout" init={[["Are you authorized to work in the US without sponsorship?", "Must answer: Yes"], ["Can you start within 3 months?", "Must answer: Yes"], ["Link to your portfolio", "Must be provided"]]} />
             </div>
             <div className="field"><label>Must-haves</label>
               <div className="chips">{musts.map((t) => <span key={t} className="chip">{t} <button aria-label="Remove" onClick={() => setMusts(musts.filter((x) => x !== t))}>×</button></span>)}<button className="chip add" onClick={() => { const t = prompt("Must-have"); if (t) setMusts([...musts, t]); }}>+ Add</button></div>

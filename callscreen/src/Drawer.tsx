@@ -145,7 +145,7 @@ export function Drawer({ id, role, onClose }: { id: string | null; role: Role | 
             <>
               <h2>From the application</h2>
               <div className="kv">
-                <div><small>Work authorization</small><span className={c.authorized === false ? "warn" : ""}>{c.authorized ? "Yes, no sponsorship needed" : "Needs sponsorship"}</span></div>
+                <div><small>Work authorization</small><span className={c.authorized === false ? "warn" : ""}>{c.authorized ? "Authorized to work in the US" : "Needs US sponsorship"}</span></div>
                 <div><small>Earliest start</small><span>{c.startDate || "–"}</span></div>
                 {c.note && <div style={{ gridColumn: "1 / -1" }}><small>In their words</small><span>{c.note}</span></div>}
               </div>
