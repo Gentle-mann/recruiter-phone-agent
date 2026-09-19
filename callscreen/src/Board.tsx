@@ -4,6 +4,7 @@ import { useNow } from "./useNow";
 import { useData } from "./data";
 import { SocialIcon } from "./icons";
 import { ApplyLink } from "./ApplyLink";
+import { ModeSwitch } from "./ModeSwitch";
 import type { Candidate as Cand, Role } from "./types";
 
 export function Pie({ v }: { v: number }) {
@@ -78,11 +79,12 @@ export function Board({ role, onOpen }: { role: Role; onOpen: (id: string) => vo
           <p className="sub">{role.team} · opened {openedAgo.replace(/d$/, " days")} ago · {cands?.length ?? 0} applications</p>
         </div>
         <div className="top-actions">
+          <ApplyLink slug={role.slug} />
           <label className="search">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
             <input placeholder="Find a candidate" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
-          <ApplyLink slug={role.slug} />
+          <ModeSwitch />
         </div>
       </header>
       <div className="board">

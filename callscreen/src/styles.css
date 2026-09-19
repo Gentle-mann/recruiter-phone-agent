@@ -401,7 +401,3 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .apply-foot { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
 .apply-foot .apply-muted { max-width: 34ch; }
 @media (max-width: 640px) { .apply .row2 { grid-template-columns: 1fr; } }
-
-/* mode switch in the sidebar */
-.side .mode { width: 100%; margin-bottom: 4px; }
-.side .mode button { flex: 1; }
