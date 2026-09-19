@@ -32,7 +32,7 @@ Session drafts and generated samples live in React memory and reset on page refr
 
 The `/agent` page uses `@elevenlabs/react` with server-issued, single-use signed WebSocket URLs. Voice and text modes share the configured agent, with start/end controls and a session-only transcript.
 
-Copy `.env.example` to `.env.local`, set `ELEVENLABS_LOCAL_PREVIEW=true`, `ELEVENLABS_AGENT_ID`, and `ELEVENLABS_API_KEY`, then restart the server. Enable authentication on the ElevenLabs agent. The local project configuration already contains the created demo agent ID; its API key is intentionally blank until configured. Never commit `.env.local`.
+Copy `.env.example` to `.env.local`, set `ELEVENLABS_LOCAL_PREVIEW=true`, `ELEVENLABS_AGENT_ID`, and `ELEVENLABS_API_KEY`, then restart the server. Enable authentication on the ElevenLabs agent. The API key needs **ElevenAgents Write** (`convai_write`): ElevenLabs requires this permission even for the signed-URL GET endpoint; Read alone returns HTTP 401. Other endpoint scopes can remain disabled. Never commit `.env.local`.
 
 This is a **local developer preview**, not a public candidate endpoint: the server must remain bound to loopback. Session creation requires a matching localhost Origin. Do not expose it through a tunnel or reverse proxy; add real application authentication, quotas, and ownership checks before deployment. Configuration status is not proof of valid credentials; only a successful conversation confirms the connection.
 
